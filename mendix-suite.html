@@ -1,0 +1,4249 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mendix AI Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070d;--sf:#0f0f18;--s2:#15151f;--b:#232332;--b2:#2c2c3e;
+  --g:#00e5a0;--p:#6366f1;--y:#f59e0b;--pk:#ec4899;--c:#06b6d4;
+  --t:#eeeef5;--m:#5c5c72;--err:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:"DM Mono",monospace;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+button{font-family:"DM Mono",monospace;cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:"DM Mono",monospace;background:var(--b);color:var(--t);border:1px solid var(--b2);border-radius:6px;padding:6px 10px;font-size:12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--p)}
+select option{background:var(--s2)}
+
+/* HEADER */
+#hdr{background:var(--sf);border-bottom:1px solid var(--b);padding:0 16px;flex-shrink:0}
+#hdr-top{display:flex;align-items:center;gap:12px;height:48px}
+#brand{font-family:"Syne",sans-serif;font-size:15px;font-weight:700;color:var(--t);letter-spacing:.5px}
+#brand em{font-family:"Instrument Serif",serif;font-style:italic;color:var(--g)}
+#live-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--g);opacity:.8}
+#live-dot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hdr-spacer{flex:1}
+.hdr-btn{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:6px;padding:5px 10px;font-size:11px;transition:all .2s}
+.hdr-btn:hover{color:var(--t);border-color:var(--p)}
+#settings-strip{display:flex;align-items:center;gap:10px;height:36px;border-top:1px solid var(--b)}
+.settings-label{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.5px}
+#acc-switcher-wrap{position:relative}
+#acc-btn{background:var(--b2);color:var(--t);border:1px solid var(--b);border-radius:6px;padding:4px 12px;font-size:12px;display:flex;align-items:center;gap:8px;min-width:160px;justify-content:space-between;transition:border-color .2s}
+#acc-btn:hover,#acc-btn.open{border-color:var(--g)}
+#acc-btn .acc-arrow{font-size:9px;color:var(--m);transition:transform .2s}
+#acc-btn.open .acc-arrow{transform:rotate(180deg)}
+#acc-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--s2);border:1px solid var(--b2);border-radius:10px;min-width:240px;z-index:300;box-shadow:0 8px 32px rgba(0,0,0,.5);overflow:hidden}
+#acc-menu.open{display:block}
+#acc-menu-list{max-height:200px;overflow-y:auto;padding:6px}
+.acc-item{display:flex;align-items:center;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:12px;gap:8px;transition:background .15s}
+.acc-item:hover{background:var(--b2)}
+.acc-item.active{color:var(--g)}
+.acc-item.active .acc-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g);margin-right:2px;flex-shrink:0}
+.acc-item-name{flex:1}
+.acc-item-del{background:none;color:transparent;font-size:13px;padding:0 2px;line-height:1;border-radius:3px;transition:color .15s}
+.acc-item:hover .acc-item-del{color:var(--m)}
+.acc-item-del:hover{color:var(--err) !important}
+#acc-menu-footer{border-top:1px solid var(--b);padding:8px}
+#acc-new-row{display:flex;gap:6px;align-items:center}
+#acc-new-inp{flex:1;background:var(--b);border:1px solid var(--b2);border-radius:6px;height:28px;font-size:12px;padding:0 8px;margin:0}
+#acc-new-inp:focus{border-color:var(--g)}
+#acc-new-btn{background:var(--g);color:#07070d;border:none;border-radius:6px;height:28px;padding:0 10px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;transition:background .2s}
+#acc-new-btn:hover{background:#00c988}
+.settings-sep{width:1px;height:18px;background:var(--b2)}
+select.sm{height:26px;padding:2px 8px;font-size:11px;border-radius:5px}
+
+/* TABS */
+#tabs-bar{background:var(--sf);border-bottom:1px solid var(--b);display:flex;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+#tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{background:none;color:var(--m);border:none;border-bottom:2px solid transparent;padding:8px 14px;font-size:11px;white-space:nowrap;transition:all .2s;font-family:"DM Mono",monospace;position:relative}
+.tab-btn:hover{color:var(--t)}
+.tab-btn.active{color:var(--g);border-bottom-color:var(--g)}
+.tab-badge{position:absolute;top:4px;right:6px;font-size:9px;color:var(--y)}
+
+/* PANELS */
+#panels{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.panel{display:none;flex:1;flex-direction:column;overflow:hidden}
+.panel.active{display:flex}
+
+/* CHAT PANELS */
+.chat-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.tbar{background:var(--sf);border-bottom:1px solid var(--b);padding:6px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.tbar-title{font-size:11px;font-weight:600;color:var(--g);font-family:"Syne",sans-serif}
+.chip{background:var(--b2);color:var(--m);border:1px solid var(--b);border-radius:20px;padding:3px 10px;font-size:10px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.chip:hover,.chip.active{background:var(--p);color:#fff;border-color:var(--p)}
+.chip.dyn{background:var(--s2);border-color:var(--p);color:var(--p)}
+.chip.dyn:hover{background:var(--p);color:#fff}
+.chat-win{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.msg{max-width:88%;border-radius:10px;padding:10px 14px;font-size:12px;line-height:1.6;word-break:break-word}
+.msg.user{background:var(--p);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.msg.agent{background:var(--s2);border:1px solid var(--b2);align-self:flex-start;border-bottom-left-radius:3px}
+.msg.agent h3,.msg.agent h4{font-family:"Syne",sans-serif;color:var(--g);margin-bottom:6px;font-size:12px}
+.msg.agent strong{color:var(--y)}
+.msg.agent ul{padding-left:16px;margin:4px 0}
+.msg.agent li{margin-bottom:2px}
+.msg.agent hr{border:none;border-top:1px solid var(--b2);margin:8px 0}
+/* Message pair */
+.msg-pair{display:flex;flex-direction:column;gap:6px;position:relative}
+.msg-pair:hover .pair-del-btn{opacity:1}
+.pair-del-btn{position:absolute;top:0;right:0;opacity:0;background:var(--b);border:1px solid var(--b2);color:var(--m);border-radius:5px;padding:2px 7px;font-size:10px;cursor:pointer;transition:all .2s;z-index:10}
+.pair-del-btn:hover{background:var(--err);border-color:var(--err);color:#fff}
+.pair-confirm{display:none;align-items:center;gap:8px;background:#1a0808;border:1px solid var(--err);border-radius:7px;padding:7px 12px;font-size:11px;color:var(--err)}
+.pair-confirm.show{display:flex}
+.pair-confirm-yes{background:var(--err);color:#fff;border:none;border-radius:5px;padding:3px 10px;font-size:11px;cursor:pointer}
+.pair-confirm-no{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:5px;padding:3px 10px;font-size:11px;cursor:pointer}
+.src-chip{display:inline-block;background:var(--b);border:1px solid var(--b2);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--c);margin:2px 2px 0 0}
+.typing{display:flex;gap:4px;align-items:center;padding:10px 14px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--m);animation:bounce .8s infinite}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.inp-area{background:var(--sf);border-top:1px solid var(--b);padding:10px 14px;flex-shrink:0}
+.sugg-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:24px}
+.inp-row{display:flex;gap:8px}
+.inp-row textarea{flex:1;resize:none;height:38px;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.4}
+.send-btn{background:var(--g);color:#07070d;border-radius:8px;padding:8px 16px;font-weight:600;font-size:12px;white-space:nowrap;transition:background .2s}
+.send-btn:hover{background:#00c988}
+.send-btn:disabled{opacity:.5;cursor:not-allowed}
+.tok-count{font-size:10px;color:var(--m);margin-left:auto}
+
+/* DOSSIER */
+.dos-toolbar{background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.dos-btn{background:var(--b);color:var(--t);border:1px solid var(--b2);border-radius:6px;padding:5px 12px;font-size:11px;transition:all .2s}
+.dos-btn:hover{border-color:var(--p);color:var(--p)}
+.dos-btn.primary{background:var(--g);color:#07070d;border-color:var(--g);font-weight:600}
+.dos-btn.primary:hover{background:#00c988}
+.dos-btn.danger{color:var(--err);border-color:var(--err)}
+.dos-btn.danger:hover{background:var(--err);color:#fff}
+#dos-confirm-bar{display:none;background:#1a0a0a;border:1px solid var(--err);border-radius:6px;padding:6px 12px;align-items:center;gap:10px;font-size:11px;color:var(--err)}
+.dos-body{flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.dos-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dos-card{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px}
+.dos-card.full{grid-column:1/-1}
+.dos-card-label{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.dos-card-item{padding:4px 8px;border-radius:5px;cursor:pointer;border:1px solid transparent;font-size:12px;transition:all .15s;margin-bottom:3px;line-height:1.4}
+.dos-card-item:hover{background:var(--b2);border-color:var(--b2)}
+.icp-badge{display:inline-block;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+.icp-green{background:#0a2e1f;color:var(--g);border:1px solid var(--g)}
+.icp-yellow{background:#2e1f0a;color:var(--y);border:1px solid var(--y)}
+.icp-red{background:#2e0a0a;color:var(--err);border:1px solid var(--err)}
+.show-more-btn{background:none;color:var(--p);border:none;font-size:11px;padding:2px 6px;cursor:pointer;text-decoration:underline}
+
+/* ACCOUNT MAP */
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:14px}
+.map-card{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px}
+.map-card-name{font-weight:600;font-size:13px;margin-bottom:2px}
+.map-card-title{font-size:11px;color:var(--m);margin-bottom:8px}
+.role-badge{display:inline-block;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;margin-bottom:8px}
+.map-card-insight{font-size:11px;color:var(--t);opacity:.8;line-height:1.5;margin-bottom:6px}
+.map-card-strat{font-size:10px;color:var(--c);font-style:italic}
+
+/* CONTACTS */
+.contacts-toolbar{background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.contacts-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.contact-card{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px;display:flex;gap:12px;align-items:flex-start}
+.contact-avatar{width:38px;height:38px;border-radius:50%;background:var(--p);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;font-family:"Syne",sans-serif}
+.contact-info{flex:1}
+.contact-name{font-weight:600;font-size:13px}
+.contact-title{font-size:11px;color:var(--m);margin-bottom:6px}
+.contact-fields{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.contact-field{display:flex;align-items:center;gap:6px;font-size:11px}
+.contact-field-lbl{color:var(--m);width:52px;flex-shrink:0}
+.contact-field input{background:none;border:none;border-bottom:1px solid var(--b2);border-radius:0;color:var(--t);font-size:11px;padding:1px 0;flex:1}
+.contact-field input:focus{border-bottom-color:var(--p)}
+.contact-actions{display:flex;gap:6px;flex-wrap:wrap}
+.cact-btn{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:5px;padding:3px 8px;font-size:10px;transition:all .2s}
+.cact-btn:hover{color:var(--t);border-color:var(--p)}
+.cact-btn.del{color:var(--err);border-color:var(--err)}
+.cact-btn.del:hover{background:var(--err);color:#fff}
+.seq-status{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:6px}
+.seq-active{background:#0a1a2e;color:var(--c);border:1px solid var(--c)}
+.seq-none{background:var(--b);color:var(--m)}
+
+/* SEQUENCE */
+.seq-contact-bar{background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.touch-card{background:var(--b);border:1px solid var(--b2);border-radius:8px;padding:12px;margin-top:8px}
+.touch-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.touch-badge{border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600}
+.touch-email{background:#1a1a2e;color:var(--p);border:1px solid var(--p)}
+.touch-li{background:#0a2020;color:var(--c);border:1px solid var(--c)}
+.touch-call{background:#2e1a0a;color:var(--y);border:1px solid var(--y)}
+.touch-day{font-size:10px;color:var(--m)}
+.touch-subject{font-size:11px;color:var(--y);font-style:italic;margin-bottom:6px}
+.touch-body{font-size:11px;line-height:1.6;color:var(--t);white-space:pre-wrap;margin-bottom:8px}
+.touch-cta{font-size:10px;color:var(--c);font-style:italic;margin-bottom:8px}
+.touch-actions{display:flex;gap:6px;flex-wrap:wrap}
+.touch-btn{background:var(--b2);color:var(--t);border:1px solid var(--b2);border-radius:5px;padding:4px 10px;font-size:10px;transition:all .2s}
+.touch-btn:hover{border-color:var(--g);color:var(--g)}
+
+/* TASKS */
+.tasks-toolbar{background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.tasks-body{flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.task-item{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.task-check{width:16px;height:16px;border-radius:3px;border:2px solid var(--b2);cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .2s}
+.task-check.done-check{background:var(--g);border-color:var(--g);color:#07070d}
+.task-body{flex:1}
+.task-text{font-size:12px;line-height:1.4;margin-bottom:4px}
+.task-text.done-text{text-decoration:line-through;color:var(--m)}
+.task-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:10px;color:var(--m)}
+.task-prio{border-radius:3px;padding:1px 6px;font-size:9px;font-weight:600}
+.prio-high{background:#2e0a0a;color:var(--err);border:1px solid var(--err)}
+.prio-mid{background:#2e1f0a;color:var(--y);border:1px solid var(--y)}
+.prio-low{background:#0a1a0a;color:var(--g);border:1px solid var(--g)}
+.task-contact-badge{background:#1a0a2e;color:var(--p);border:1px solid var(--p);border-radius:4px;padding:1px 6px;font-size:9px}
+.task-actions{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.task-act-btn{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:4px;padding:2px 8px;font-size:9px;cursor:pointer;transition:all .2s}
+.task-act-btn:hover{color:var(--t);border-color:var(--p)}
+.task-touch-content{display:none;background:var(--bg);border:1px solid var(--b2);border-radius:5px;padding:8px;margin-top:6px;font-size:11px;line-height:1.5;white-space:pre-wrap}
+
+/* NOTES */
+.notes-toolbar{background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;gap:8px;flex-shrink:0}
+.notes-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.note-item{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:10px 14px}
+.note-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:11px;color:var(--m)}
+.note-header:hover .note-ts{color:var(--t)}
+.note-ts{font-size:10px}
+.note-content{display:none;margin-top:8px;font-size:12px;line-height:1.6;white-space:pre-wrap;color:var(--t)}
+.note-del{background:none;color:var(--m);border:none;font-size:12px;padding:0 4px;cursor:pointer}
+.note-del:hover{color:var(--err)}
+#note-inp-wrap{padding:0 14px 14px}
+#note-inp-wrap textarea{width:100%;height:60px;resize:none}
+
+/* SEARCH TAB */
+.search-toolbar{background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;gap:8px;flex-shrink:0}
+.search-results{flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.search-hit{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:11px}
+.search-hit-tab{font-size:10px;color:var(--g);font-weight:600;margin-bottom:4px;text-transform:uppercase}
+.search-hit mark{background:var(--y);color:#07070d;border-radius:2px;padding:0 2px}
+
+/* FAVORITES */
+.favs-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.fav-item{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px}
+.fav-tab{font-size:10px;color:var(--g);font-weight:600;text-transform:uppercase;margin-bottom:4px}
+.fav-text{font-size:12px;line-height:1.6;color:var(--t)}
+.fav-del{background:none;border:1px solid var(--err);color:var(--err);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;margin-top:6px;float:right}
+
+/* STAR BTN */
+.star-btn{background:none;border:none;color:var(--m);font-size:14px;cursor:pointer;padding:2px 4px;float:right}
+.star-btn:hover,.star-btn.starred{color:var(--y)}
+
+/* MODAL */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center}
+#modal-overlay.open{display:flex}
+#modal-box{background:var(--s2);border:1px solid var(--b2);border-radius:12px;max-width:560px;width:92%;max-height:80vh;display:flex;flex-direction:column}
+#modal-hdr{padding:14px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center}
+#modal-label{font-size:10px;color:var(--g);text-transform:uppercase;font-weight:600}
+#modal-title{font-size:13px;font-weight:600;margin-top:2px}
+#modal-close{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer}
+#modal-close:hover{color:var(--err)}
+#modal-body{padding:16px;overflow-y:auto;font-size:12px;line-height:1.7;white-space:pre-wrap;flex:1}
+
+.msg.agent table{border-collapse:collapse;width:100%;margin:4px 0;font-size:11px}
+.msg.agent th{background:var(--b2);color:var(--g);padding:5px 8px;text-align:left;border:1px solid var(--b2);font-weight:600}
+.msg.agent td{padding:4px 8px;border:1px solid var(--b2);color:var(--t);vertical-align:top}
+.msg.agent tr:nth-child(even) td{background:rgba(255,255,255,.03)}
+
+/* CONTACT PICKER */
+#picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:600;align-items:center;justify-content:center}
+#picker-overlay.open{display:flex}
+#picker-box{background:var(--s2);border:1px solid var(--b2);border-radius:10px;max-width:380px;width:90%;padding:16px}
+#picker-title{font-size:13px;font-weight:600;margin-bottom:12px;font-family:"Syne",sans-serif}
+.picker-item{padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px}
+.picker-item:hover{background:var(--b2)}
+#picker-cancel{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;margin-top:10px;width:100%}
+
+/* CONTACT FORM MODAL */
+#cform-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:700;align-items:center;justify-content:center}
+#cform-overlay.open{display:flex}
+#cform-box{background:var(--s2);border:1px solid var(--b2);border-radius:12px;width:92%;max-width:420px;padding:20px;display:flex;flex-direction:column;gap:12px}
+#cform-box h3{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;color:var(--g);margin:0}
+.cform-field{display:flex;flex-direction:column;gap:4px}
+.cform-label{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.5px}
+.cform-field input,.cform-field select{width:100%;height:34px;font-size:13px;padding:0 10px;background:var(--b);border:1px solid var(--b2);border-radius:7px;color:var(--t)}
+.cform-field input:focus,.cform-field select:focus{border-color:var(--g);outline:none}
+.cform-row{display:flex;gap:8px}
+.cform-row .cform-field{flex:1}
+#cform-save{background:var(--g);color:#07070d;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:"DM Mono",monospace;transition:background .2s}
+#cform-save:hover{background:#00c988}
+#cform-cancel{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:8px;padding:8px;font-size:12px;cursor:pointer;width:100%;font-family:"DM Mono",monospace}
+
+/* INLINE EDITABLE CONTACT NAME/TITLE */
+.contact-name-inp{background:none;border:none;border-bottom:1px solid transparent;color:var(--t);font-size:13px;font-weight:600;font-family:"DM Mono",monospace;padding:0;width:100%;transition:border-color .2s}
+.contact-name-inp:focus{outline:none;border-bottom-color:var(--g)}
+.contact-title-inp{background:none;border:none;border-bottom:1px solid transparent;color:var(--m);font-size:11px;font-family:"DM Mono",monospace;padding:0;width:100%;transition:border-color .2s}
+.contact-title-inp:focus{outline:none;border-bottom-color:var(--g)}
+.contact-lang-sel{background:var(--b);border:1px solid var(--b2);border-radius:5px;color:var(--t);font-size:10px;padding:2px 6px;height:22px;font-family:"DM Mono",monospace;cursor:pointer}
+.contact-lang-sel:focus{outline:none;border-color:var(--g)}
+
+/* Email format bar */background:var(--sf);border-bottom:1px solid var(--b);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.email-format-label{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.email-format-inp{flex:1;min-width:160px;max-width:280px;height:28px;font-size:12px;padding:0 8px;background:var(--b);border:1px solid var(--b2);border-radius:6px;color:var(--t);font-family:"DM Mono",monospace}
+.email-format-inp:focus{border-color:var(--g);outline:none}
+.email-format-hint{font-size:10px;color:var(--m)}
+.email-format-hint code{background:var(--b);border-radius:3px;padding:1px 4px;color:var(--c);font-size:10px}
+
+/* Clickable contact field badges */
+.contact-field-badge{display:inline-flex;align-items:center;gap:6px;border-radius:6px;padding:3px 8px;font-size:11px;text-decoration:none;transition:opacity .2s;max-width:100%;overflow:hidden}
+.contact-field-badge:hover{opacity:.8}
+.contact-field-badge-li{background:#0a1628;color:#0a66c2;border:1px solid #0a66c2}
+.contact-field-badge-email{background:#1a0a2e;color:#a78bfa;border:1px solid #7c3aed}
+.contact-field-badge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+.contact-field-edit{background:none;border:none;color:var(--m);font-size:11px;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1}
+.contact-field-edit:hover{color:var(--t)}
+.contact-field-badge-wrap{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+
+.contact-group{margin-bottom:8px}
+.contact-group-header{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--b2);border-radius:8px;cursor:pointer;background:var(--s2);transition:background .15s;user-select:none}
+.contact-group-header:hover{background:var(--b2)}
+.contact-group-header.open{border-radius:8px 8px 0 0;border-bottom-color:var(--b)}
+.contact-group-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:"Syne",sans-serif}
+.contact-group-name{font-size:12px;font-weight:600;color:var(--t)}
+.contact-group-meta{font-size:10px;color:var(--m)}
+.contact-group-lang{font-size:10px;background:var(--b);border:1px solid var(--b2);border-radius:3px;padding:1px 5px;color:var(--c)}
+.contact-group-chevron{font-size:9px;color:var(--m);transition:transform .2s;flex-shrink:0}
+.contact-group-header.open .contact-group-chevron{transform:rotate(180deg)}
+.contact-group-tasks{display:none;border:1px solid var(--b2);border-top:none;border-radius:0 0 8px 8px;padding:6px 8px}
+.contact-group-tasks.open{display:block}
+.cg-count-badge{background:var(--b);border:1px solid var(--b2);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--m);white-space:nowrap;flex-shrink:0}
+.cg-open-badge{background:#0a1a2e;border:1px solid var(--c);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--c);white-space:nowrap;flex-shrink:0}
+/* EXPIRED TASKS BANNER */
+#expired-banner{display:none;background:#1a0808;border-bottom:1px solid var(--err);padding:6px 16px;font-size:11px;color:var(--err);align-items:center;gap:10px;flex-shrink:0}
+#expired-banner.show{display:flex}
+#expired-banner-close{background:none;border:none;color:var(--err);cursor:pointer;font-size:14px;margin-left:auto}
+
+/* IMPORT MODAL */
+#import-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:800;align-items:center;justify-content:center}
+#import-overlay.open{display:flex}
+#import-box{background:var(--s2);border:1px solid var(--b2);border-radius:12px;width:92%;max-width:460px;padding:20px;display:flex;flex-direction:column;gap:12px}
+#import-box h3{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;color:var(--g);margin:0}
+#import-textarea{height:140px;resize:none;background:var(--b);border:1px solid var(--b2);border-radius:8px;color:var(--t);font-size:12px;padding:10px;font-family:"DM Mono",monospace}
+#import-textarea:focus{border-color:var(--g);outline:none}
+#import-hint{font-size:10px;color:var(--m)}
+#import-do-btn{background:var(--g);color:#07070d;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:"DM Mono",monospace}
+#import-cancel-btn{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:"DM Mono",monospace}
+
+/* ARCHIVE */
+.acc-item-archived{opacity:.5;font-style:italic}
+.acc-archive-section{border-top:1px solid var(--b);margin-top:6px;padding-top:6px}
+.acc-archive-label{font-size:10px;color:var(--m);padding:4px 8px;text-transform:uppercase;letter-spacing:.5px}
+.acc-item-restore{background:none;color:var(--m);font-size:10px;padding:0 4px;border:none;cursor:pointer}
+.acc-item-restore:hover{color:var(--g)}
+
+/* CROSS-ACCOUNT SEARCH */
+.search-acc-badge{display:inline-block;background:var(--b2);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--c);margin-bottom:3px}
+
+.touch-status-wrap{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+.touch-status-btn{border-radius:5px;padding:3px 10px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid;font-family:"DM Mono",monospace;transition:all .2s}
+.ts-none{background:var(--b);color:var(--m);border-color:var(--b2)}
+.ts-none:hover{border-color:var(--p);color:var(--p)}
+.ts-sent{background:#0a1a2e;color:var(--c);border-color:var(--c)}
+.ts-opened{background:#1a1a0a;color:var(--y);border-color:var(--y)}
+.ts-replied{background:#0a2e1a;color:var(--g);border-color:var(--g)}
+.ts-noreply{background:#2e0a0a;color:var(--err);border-color:var(--err)}
+.touch-status-date{font-size:10px;color:var(--m)}
+.task-link-wrap{margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.task-link-sel{background:var(--b);border:1px solid var(--b2);border-radius:5px;color:var(--t);font-size:10px;padding:2px 6px;height:22px;font-family:"DM Mono",monospace;max-width:160px}
+.task-link-sel:focus{outline:none;border-color:var(--g)}
+.task-link-btn{background:var(--g);color:#07070d;border:none;border-radius:5px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:"DM Mono",monospace;font-weight:600}
+
+.contact-group-empty{color:var(--m);font-size:11px;padding:6px 0;font-style:italic}
+
+/* PERSON EXTRACT MODAL */
+#pextract-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:800;align-items:center;justify-content:center}
+#pextract-overlay.open{display:flex}
+#pextract-box{background:var(--s2);border:1px solid var(--b2);border-radius:12px;width:92%;max-width:480px;max-height:80vh;display:flex;flex-direction:column}
+#pextract-hdr{padding:14px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center}
+#pextract-title{font-family:"Syne",sans-serif;font-size:13px;font-weight:700;color:var(--g)}
+#pextract-close{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer}
+#pextract-list{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.pextract-item{background:var(--b);border:1px solid var(--b2);border-radius:8px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:border-color .15s}
+.pextract-item:hover{border-color:var(--p)}
+.pextract-item.selected{border-color:var(--g);background:#0a1a12}
+.pextract-check{width:16px;height:16px;border-radius:3px;border:2px solid var(--b2);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .2s}
+.pextract-item.selected .pextract-check{background:var(--g);border-color:var(--g);color:#07070d}
+.pextract-info{flex:1}
+.pextract-name{font-size:12px;font-weight:600;color:var(--t)}
+.pextract-title{font-size:11px;color:var(--m);margin-top:2px}
+.pextract-role{font-size:10px;color:var(--p);margin-top:4px}
+.pextract-match{font-size:10px;color:var(--g);font-style:italic;margin-top:2px}
+#pextract-footer{padding:12px 16px;border-top:1px solid var(--b);display:flex;gap:8px}
+#pextract-import{background:var(--g);color:#07070d;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:"DM Mono",monospace;flex:1}
+#pextract-import:disabled{opacity:.4;cursor:not-allowed}
+#pextract-cancel{background:var(--b);color:var(--m);border:1px solid var(--b2);border-radius:8px;padding:9px 14px;font-size:12px;cursor:pointer;font-family:"DM Mono",monospace}
+#pextract-loading{padding:20px;text-align:center;color:var(--m);font-size:12px}
+
+/* Person extract button on agent messages */
+.person-extract-btn{background:var(--b);border:1px solid var(--b2);color:var(--c);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;margin-top:6px;display:inline-block;transition:all .2s}
+.person-extract-btn:hover{border-color:var(--c);background:#0a1a20}
+
+@keyframes flash-tab{0%,100%{background:none}50%{background:var(--g);color:#07070d}}
+.flash-anim{animation:flash-tab .6s 2}
+
+/* HELP TAB */
+.help-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.help-section{margin-bottom:20px}
+.help-section-title{font-family:"Syne",sans-serif;font-size:14px;font-weight:700;color:var(--g);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.help-card{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.help-card-title{font-size:12px;font-weight:600;color:var(--t);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.help-card-body{font-size:11px;color:var(--m);line-height:1.6}
+.help-card-body strong{color:var(--t)}
+.help-step{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.help-step-num{width:24px;height:24px;border-radius:50%;background:var(--g);color:#07070d;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:"Syne",sans-serif}
+.help-step-text{flex:1;font-size:12px;line-height:1.5}
+.help-step-text strong{color:var(--g)}
+.help-flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:12px;background:var(--b);border-radius:8px;font-size:11px}
+.help-flow-item{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:3px 8px;color:var(--t);white-space:nowrap}
+.help-flow-arrow{color:var(--m);font-size:10px}
+.help-tip{display:flex;gap:8px;padding:8px 10px;background:#1a1200;border:1px solid #3a2800;border-radius:6px;font-size:11px;color:var(--y);margin-bottom:6px;line-height:1.5}
+.help-warn{display:flex;gap:8px;padding:8px 10px;background:#1a0808;border:1px solid #3a0a0a;border-radius:6px;font-size:11px;color:var(--err);margin-bottom:6px;line-height:1.5}
+.help-tab-badge{display:inline-block;background:var(--b2);border:1px solid var(--b);border-radius:4px;padding:1px 6px;font-size:10px;color:var(--c);margin:0 2px}
+
+/* USAGE TAB */
+.usage-total-card{background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.usage-total-num{font-family:"Syne",sans-serif;font-size:22px;font-weight:800;color:var(--g)}
+.usage-total-sub{font-size:10px;color:var(--m);margin-top:2px}
+.usage-acc-card{background:var(--s2);border:1px solid var(--b2);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.usage-acc-header{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s}
+.usage-acc-header:hover{background:var(--b2)}
+.usage-acc-name{font-size:13px;font-weight:600;flex:1}
+.usage-acc-cost{font-size:12px;color:var(--g);font-weight:600;margin-right:4px}
+.usage-acc-tok{font-size:11px;color:var(--m)}
+.usage-acc-chevron{font-size:10px;color:var(--m);transition:transform .2s}
+.usage-acc-detail{display:none;border-top:1px solid var(--b);padding:10px 14px}
+.usage-acc-detail.open{display:block}
+.usage-agent-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px;border-bottom:1px solid var(--b)}
+.usage-agent-row:last-child{border-bottom:none}
+.usage-agent-name{width:80px;color:var(--m);flex-shrink:0;text-transform:capitalize}
+.usage-bar-wrap{flex:1;height:5px;background:var(--b);border-radius:3px;overflow:hidden}
+.usage-bar{height:100%;background:var(--p);border-radius:3px}
+.usage-agent-tok{width:65px;text-align:right;color:var(--t)}
+.usage-agent-cost{width:48px;text-align:right;color:var(--g);font-weight:600}
+/* Dossier cost pill */
+#dos-cost-pill{font-size:10px;color:var(--m);margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid transparent;transition:all .2s;position:relative;white-space:nowrap}
+#dos-cost-pill:hover{border-color:var(--b2);color:var(--t)}
+.pill-tok{opacity:.7}
+.pill-cost{color:var(--g);font-weight:600}
+#dos-cost-tooltip{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:10px 14px;z-index:200;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#dos-cost-tooltip.open{display:block}
+
+/* BATTLE CARD / OBJECTION specifics */
+.battle-section{margin-bottom:12px}
+.battle-section h4{font-family:"Syne",sans-serif;color:var(--g);font-size:11px;text-transform:uppercase;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-hdr">
+      <div>
+        <div id="modal-label"></div>
+        <div id="modal-title"></div>
+      </div>
+      <button id="modal-close">&#x2715;</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- PERSON EXTRACT MODAL -->
+<div id="pextract-overlay">
+  <div id="pextract-box">
+    <div id="pextract-hdr">
+      <div id="pextract-title">Personen toevoegen aan Contacten</div>
+      <button id="pextract-close">&#x2715;</button>
+    </div>
+    <div id="pextract-list"></div>
+    <div id="pextract-footer">
+      <button id="pextract-cancel">Annuleer</button>
+      <button id="pextract-import" disabled>Importeer geselecteerde</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT FORM MODAL -->
+<div id="cform-overlay">
+  <div id="cform-box">
+    <h3 id="cform-title">Contact toevoegen</h3>
+    <div class="cform-row">
+      <div class="cform-field"><div class="cform-label">Naam *</div><input id="cform-name" type="text" placeholder="Voornaam Achternaam"></div>
+    </div>
+    <div class="cform-field"><div class="cform-label">Functietitel *</div><input id="cform-jobtitle" type="text" placeholder="VP IT / Head of Digital"></div>
+    <div class="cform-field">
+      <div class="cform-label">Rol</div>
+      <select id="cform-role">
+        <option value="Beslisser">Beslisser</option>
+        <option value="Champion">Champion</option>
+        <option value="Influencer" selected>Influencer</option>
+        <option value="Blocker">Blocker</option>
+        <option value="Technisch Evaluator">Technisch Evaluator</option>
+      </select>
+    </div>
+    <div class="cform-row">
+      <div class="cform-field"><div class="cform-label">Email</div><input id="cform-email" type="email" placeholder="naam@bedrijf.com"></div>
+      <div class="cform-field"><div class="cform-label">Telefoon</div><input id="cform-phone" type="tel" placeholder="+31..."></div>
+    </div>
+    <div class="cform-field"><div class="cform-label">LinkedIn</div><input id="cform-linkedin" type="text" placeholder="linkedin.com/in/..."></div>
+    <button id="cform-save">Opslaan</button>
+    <button id="cform-cancel">Annuleer</button>
+  </div>
+</div>
+
+<!-- CONTACT PICKER -->
+<div id="picker-overlay">
+  <div id="picker-box">
+    <div id="picker-title">Selecteer contact voor e-mail</div>
+    <div id="picker-list"></div>
+    <button id="picker-cancel">Annuleer</button>
+  </div>
+</div>
+
+<!-- EXPIRED TASKS BANNER -->
+<div id="expired-banner">
+  <span>&#x26A0;&#xFE0F; Je hebt <strong id="expired-count"></strong> verlopen taken — <button style="background:none;border:none;color:var(--err);cursor:pointer;text-decoration:underline;font-size:11px;font-family:'DM Mono',monospace" onclick="switchTab('tasks')">Bekijk taken</button></span>
+  <button id="expired-banner-close">&#x2715;</button>
+</div>
+
+<!-- IMPORT MODAL -->
+<div id="import-overlay">
+  <div id="import-box">
+    <h3>Accounts importeren</h3>
+    <div id="import-hint">Plak accountnamen — één per regel</div>
+    <textarea id="import-textarea" placeholder="UCB&#10;Eurofins&#10;ING Belgium&#10;..."></textarea>
+    <button id="import-do-btn">Importeer accounts</button>
+    <button id="import-cancel-btn">Annuleer</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-top">
+    <div id="brand">Mendix <em>AI Suite</em></div>
+    <div id="live-pill"><div id="live-dot"></div>Live</div>
+    <div class="hdr-spacer"></div>
+    <button class="hdr-btn" id="export-btn">&#x2B07; Export alles</button>
+    <button class="hdr-btn" id="export-acc-btn">&#x2B07; Export account</button>
+    <button class="hdr-btn" id="import-btn">&#x2B06; Import</button>
+    <button class="hdr-btn" id="reset-tab-btn">&#x21BA; Reset Tab</button>
+  </div>
+  <div id="settings-strip">
+    <span class="settings-label">Account</span>
+    <div id="acc-switcher-wrap">
+      <button id="acc-btn"><span id="acc-name-lbl">-- Kies account --</span><span class="acc-arrow">&#x25BC;</span></button>
+      <div id="acc-menu">
+        <div id="acc-menu-list"></div>
+        <div id="acc-menu-footer">
+          <div id="acc-new-row">
+            <input id="acc-new-inp" type="text" placeholder="Nieuw account...">
+            <button id="acc-new-btn">+ Voeg toe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-sep"></div>
+    <span class="settings-label">Toon</span>
+    <select id="sel-tone" class="sm">
+      <option value="formeel">Formeel</option>
+      <option value="direct">Direct</option>
+      <option value="casual">Casual</option>
+    </select>
+    <div class="settings-sep"></div>
+    <span class="settings-label">Taal</span>
+    <select id="sel-lang" class="sm">
+      <option value="NL">NL</option>
+      <option value="EN">EN</option>
+    </select>
+    <div class="settings-sep"></div>
+    <span class="settings-label">Regio</span>
+    <select id="sel-region" class="sm" style="max-width:140px">
+      <option value="België & Luxemburg">België & Lux</option>
+      <option value="Benelux">Benelux</option>
+      <option value="Nederland">Nederland</option>
+      <option value="DACH">DACH</option>
+      <option value="Nordics">Nordics</option>
+      <option value="Europa">Europa</option>
+      <option value="Global">Global</option>
+    </select>
+  </div>
+</div>
+
+<!-- TABS BAR -->
+<div id="tabs-bar">
+  <button class="tab-btn active" data-tab="dossier">Dossier</button>
+  <button class="tab-btn" data-tab="research">Research<span class="tab-badge" id="badge-research"></span></button>
+  <button class="tab-btn" data-tab="signal">Signals<span class="tab-badge" id="badge-signal"></span></button>
+  <button class="tab-btn" data-tab="mapping">Account Map<span class="tab-badge" id="badge-mapping"></span></button>
+  <button class="tab-btn" data-tab="contacts">Contacten</button>
+  <button class="tab-btn" data-tab="bdr">BDR<span class="tab-badge" id="badge-bdr"></span></button>
+  <button class="tab-btn" data-tab="sequence">Sequence<span class="tab-badge" id="badge-sequence"></span></button>
+  <button class="tab-btn" data-tab="email">Email Reply<span class="tab-badge" id="badge-email"></span></button>
+  <button class="tab-btn" data-tab="tasks">Tasks</button>
+  <button class="tab-btn" data-tab="pipeline">Pipeline<span class="tab-badge" id="badge-pipeline"></span></button>
+  <button class="tab-btn" data-tab="battle">Battle Card<span class="tab-badge" id="badge-battle"></span></button>
+  <button class="tab-btn" data-tab="objection">Objections<span class="tab-badge" id="badge-objection"></span></button>
+  <button class="tab-btn" data-tab="search">Zoeken</button>
+  <button class="tab-btn" data-tab="favs">Favorieten</button>
+  <button class="tab-btn" data-tab="notes">Notities</button>
+  <button class="tab-btn" data-tab="usage">Usage</button>
+  <button class="tab-btn" data-tab="help">&#x2753; Help</button>
+</div>
+
+<!-- PANELS -->
+<div id="panels">
+
+<!-- DOSSIER -->
+<div class="panel active" id="panel-dossier">
+  <div class="dos-toolbar">
+    <button class="dos-btn primary" id="dos-gen-btn">&#x2728; Genereer dossier</button>
+    <button class="dos-btn" id="dos-clear-btn">Wissen</button>
+    <button class="dos-btn" id="dos-copy-btn">&#x29C9; Kopieren</button>
+    <div class="settings-sep" style="height:18px"></div>
+    <span class="settings-label" style="font-size:10px;color:var(--m)">Regio override</span>
+    <select id="acc-region-override" class="sm" style="height:26px">
+      <option value="">Suite standaard</option>
+      <option value="België & Luxemburg">België &amp; Lux</option>
+      <option value="Benelux">Benelux</option>
+      <option value="Nederland">Nederland</option>
+      <option value="DACH">DACH</option>
+      <option value="Nordics">Nordics</option>
+      <option value="Europa">Europa</option>
+      <option value="Global">Global</option>
+    </select>
+    <button class="dos-btn danger" id="dos-del-acc-btn">&#x1F5D1; Account verwijderen</button>
+    <div id="dos-cost-pill">
+      <span class="pill-tok" id="pill-tok-lbl">0 tok</span>
+      <span style="color:var(--b2)">·</span>
+      <span class="pill-cost" id="pill-cost-lbl">€0,00</span>
+      <div id="dos-cost-tooltip">
+        <div style="font-size:10px;color:var(--m);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Verbruik per agent</div>
+        <div id="dos-cost-breakdown"></div>
+      </div>
+    </div>
+    <div id="dos-confirm-bar">
+      <span>Verwijder dit account?</span>
+      <button class="dos-btn danger" id="dos-confirm-yes">Ja, verwijder</button>
+      <button class="dos-btn" id="dos-confirm-no">Annuleer</button>
+    </div>
+  </div>
+  <div class="dos-body" id="dos-body"></div>
+</div>
+
+<!-- RESEARCH -->
+<div class="panel" id="panel-research">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Research Agent</span>
+      <button class="chip" data-chip-tab="research" data-chip="overview">Overzicht</button>
+      <button class="chip" data-chip-tab="research" data-chip="tech">Tech stack</button>
+      <button class="chip" data-chip-tab="research" data-chip="news">Laatste nieuws</button>
+      <span class="tok-count" id="tok-research">0 tok</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:5px;background:#1a1200;border:1px solid #3a2800;border-radius:6px;padding:3px 9px;font-size:10px;color:var(--y);white-space:nowrap">
+        <span>&#x26A0;&#xFE0F;</span><span>Verifieer C-level functies altijd via LinkedIn</span>
+      </div>
+    </div>
+    <div class="chat-win" id="chat-research"></div>
+    <div id="typing-research" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-research"></div>
+      <div class="inp-row">
+        <textarea id="inp-research" placeholder="Vraag over dit account..."></textarea>
+        <button class="send-btn" onclick="send('research')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNALS -->
+<div class="panel" id="panel-signal">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Signals Agent</span>
+      <button class="chip" data-chip-tab="signal" data-chip="intent">Intent signalen</button>
+      <button class="chip" data-chip-tab="signal" data-chip="hiring">Hiring signals</button>
+      <button class="chip" data-chip-tab="signal" data-chip="events">Events & triggers</button>
+      <span class="tok-count" id="tok-signal">0 tok</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:5px;background:#1a1200;border:1px solid #3a2800;border-radius:6px;padding:3px 9px;font-size:10px;color:var(--y);white-space:nowrap">
+        <span>&#x26A0;&#xFE0F;</span><span>Alleen signalen &lt; 12 maanden worden gebruikt</span>
+      </div>
+    </div>
+    <div class="chat-win" id="chat-signal"></div>
+    <div id="typing-signal" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-signal"></div>
+      <div class="inp-row">
+        <textarea id="inp-signal" placeholder="Zoek signalen..."></textarea>
+        <button class="send-btn" onclick="send('signal')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT MAP -->
+<div class="panel" id="panel-mapping">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Account Map Agent</span>
+      <button class="dos-btn" id="map-gen-btn" style="font-size:11px">&#x2728; Genereer Account Map</button>
+      <button class="dos-btn" id="map-clear-btn" style="font-size:11px">Wissen</button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#1a1500;border:1px solid #3a2e00;border-radius:6px;padding:4px 10px;font-size:10px;color:var(--y)">
+        <span>&#x26A0;&#xFE0F;</span>
+        <span>Gegenereerde persona's — geen echte personen. Verifieer via LinkedIn.</span>
+      </div>
+      <span class="tok-count" id="tok-mapping">0 tok</span>
+    </div>
+    <div class="chat-win" id="chat-mapping"></div>
+    <div id="typing-mapping" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-mapping"></div>
+      <div class="inp-row">
+        <textarea id="inp-mapping" placeholder="Stel een vraag over de stakeholders..."></textarea>
+        <button class="send-btn" onclick="send('mapping')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACTS -->
+<div class="panel" id="panel-contacts">
+  <div class="email-format-bar">
+    <span class="email-format-label">Email formaat</span>
+    <input class="email-format-inp" id="email-format-inp" type="text" placeholder="[first_initial].[last]@domein.com">
+    <button class="dos-btn primary" id="email-format-apply-btn" style="font-size:11px;height:28px">Toepassen</button>
+    <span class="email-format-hint">Variabelen: <code>[first]</code> <code>[last]</code> <code>[first_initial]</code> <code>[last_initial]</code></span>
+  </div>
+  <div class="contacts-toolbar">
+    <button class="dos-btn" id="add-contact-btn" style="font-size:11px">+ Contact toevoegen</button>
+    <button class="dos-btn" id="import-map-btn" style="font-size:11px">&#x2B06; Importeer rollen als sjabloon</button>
+  </div>
+  <div class="contacts-body" id="contacts-body"></div>
+</div>
+
+<!-- BDR -->
+<div class="panel" id="panel-bdr">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">BDR Agent</span>
+      <button class="chip" data-chip-tab="bdr" data-chip="pitch">Elevator pitch</button>
+      <button class="chip" data-chip-tab="bdr" data-chip="pain">Pain points</button>
+      <button class="chip" data-chip-tab="bdr" data-chip="value">Value prop</button>
+      <span class="tok-count" id="tok-bdr">0 tok</span>
+    </div>
+    <div class="chat-win" id="chat-bdr"></div>
+    <div id="typing-bdr" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-bdr"></div>
+      <div class="inp-row">
+        <textarea id="inp-bdr" placeholder="Vraag over outreach of positionering..."></textarea>
+        <button class="send-btn" onclick="send('bdr')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEQUENCE -->
+<div class="panel" id="panel-sequence">
+  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <!-- Sequences overview grouped by contact -->
+    <div style="flex:0 0 auto;max-height:45%;overflow-y:auto;border-bottom:2px solid var(--b);padding:10px 14px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent" id="seq-overview"></div>
+    <!-- Sequence builder chat -->
+    <div class="chat-wrap" style="flex:1;min-height:0">
+      <div class="seq-contact-bar">
+        <span class="tbar-title">Nieuwe sequence starten</span>
+        <select id="seq-contact-sel" class="sm" style="height:28px;min-width:160px">
+          <option value="">Kies contact...</option>
+        </select>
+        <button class="dos-btn" id="seq-all-tasks-btn" style="display:none;font-size:11px">&#x2714; Alle touches als taken</button>
+        <span class="tok-count" id="tok-sequence">0 tok</span>
+      </div>
+      <div class="chat-win" id="chat-sequence"></div>
+      <div id="typing-sequence" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="inp-area">
+        <div class="sugg-row" id="sugg-sequence"></div>
+        <div class="inp-row">
+          <textarea id="inp-sequence" placeholder="Genereer een outreach sequence..."></textarea>
+          <button class="send-btn" onclick="send('sequence')">Verstuur</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL REPLY -->
+<div class="panel" id="panel-email">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Email Reply Agent</span>
+      <button class="chip" data-chip-tab="email" data-chip="follow">Follow-up</button>
+      <button class="chip" data-chip-tab="email" data-chip="proposal">Voorstel reactie</button>
+      <button class="chip" data-chip-tab="email" data-chip="noshow">No-show opvolging</button>
+      <span class="tok-count" id="tok-email">0 tok</span>
+    </div>
+    <div class="chat-win" id="chat-email"></div>
+    <div id="typing-email" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-email"></div>
+      <div class="inp-row">
+        <textarea id="inp-email" placeholder="Plak ontvangen e-mail of beschrijf situatie..."></textarea>
+        <button class="send-btn" onclick="send('email')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BATTLE CARD -->
+<div class="panel" id="panel-battle">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Battle Card Agent</span>
+      <button class="chip" data-chip-tab="battle" data-chip="outsystems">vs OutSystems</button>
+      <button class="chip" data-chip-tab="battle" data-chip="powerplatform">vs Power Platform</button>
+      <button class="chip" data-chip-tab="battle" data-chip="appian">vs Appian</button>
+      <span class="tok-count" id="tok-battle">0 tok</span>
+    </div>
+    <div class="chat-win" id="chat-battle"></div>
+    <div id="typing-battle" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-battle"></div>
+      <div class="inp-row">
+        <textarea id="inp-battle" placeholder="Vraag over concurrenten of differentiatie..."></textarea>
+        <button class="send-btn" onclick="send('battle')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OBJECTIONS -->
+<div class="panel" id="panel-objection">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Objection Handler</span>
+      <button class="chip" data-chip-tab="objection" data-chip="price">Prijs bezwaar</button>
+      <button class="chip" data-chip-tab="objection" data-chip="timing">Timing bezwaar</button>
+      <button class="chip" data-chip-tab="objection" data-chip="sponsor">Geen sponsor</button>
+      <span class="tok-count" id="tok-objection">0 tok</span>
+    </div>
+    <div class="chat-win" id="chat-objection"></div>
+    <div id="typing-objection" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-objection"></div>
+      <div class="inp-row">
+        <textarea id="inp-objection" placeholder="Beschrijf de bezwaar..."></textarea>
+        <button class="send-btn" onclick="send('objection')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="panel" id="panel-pipeline">
+  <div class="chat-wrap">
+    <div class="tbar">
+      <span class="tbar-title">Pipeline Coach</span>
+      <button class="chip" data-chip-tab="pipeline" data-chip="next">Volgende stap</button>
+      <button class="chip" data-chip-tab="pipeline" data-chip="risk">Deal risico</button>
+      <button class="chip" data-chip-tab="pipeline" data-chip="forecast">Forecast</button>
+      <span class="tok-count" id="tok-pipeline">0 tok</span>
+    </div>
+    <div class="chat-win" id="chat-pipeline"></div>
+    <div id="typing-pipeline" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="inp-area">
+      <div class="sugg-row" id="sugg-pipeline"></div>
+      <div class="inp-row">
+        <textarea id="inp-pipeline" placeholder="Vraag over deal voortgang of strategie..."></textarea>
+        <button class="send-btn" onclick="send('pipeline')">Verstuur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ZOEKEN -->
+<div class="panel" id="panel-search">
+  <div class="search-toolbar">
+    <input id="search-inp" type="text" placeholder="Zoek in alle agent histories..." style="flex:1">
+    <button class="dos-btn primary" id="search-do-btn" style="font-size:11px">Zoek</button>
+  </div>
+  <div class="search-results" id="search-results"></div>
+</div>
+
+<!-- FAVORIETEN -->
+<div class="panel" id="panel-favs">
+  <div class="tbar"><span class="tbar-title">Favorieten</span></div>
+  <div class="favs-body" id="favs-body"></div>
+</div>
+
+<!-- NOTITIES -->
+<div class="panel" id="panel-notes">
+  <div class="notes-body" id="notes-body"></div>
+  <div id="note-inp-wrap">
+    <textarea id="note-inp" placeholder="Nieuwe notitie..."></textarea>
+    <button class="dos-btn primary" id="note-add-btn" style="margin-top:6px;font-size:11px">+ Notitie toevoegen</button>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="panel" id="panel-tasks">
+  <div class="tasks-toolbar">
+    <button class="chip active" data-task-filter="all">Alle</button>
+    <button class="chip" data-task-filter="open">Open</button>
+    <button class="chip" data-task-filter="done">Gedaan</button>
+    <button class="chip" data-task-filter="expired">Verlopen</button>
+    <div style="flex:1"></div>
+    <button class="dos-btn" id="add-task-btn" style="font-size:11px">+ Taak</button>
+  </div>
+  <div class="tasks-body" id="tasks-body"></div>
+</div>
+
+<!-- USAGE -->
+<div class="panel" id="panel-usage">
+  <div class="tbar">
+    <span class="tbar-title">Token Usage & Kosten</span>
+    <span style="font-size:10px;color:var(--m);margin-left:auto">Claude Sonnet 4.6 — $3/M input · $15/M output · USD→EUR 0.92</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent" id="usage-body"></div>
+</div>
+
+<!-- HELP -->
+<div class="panel" id="panel-help">
+  <div class="help-body">
+
+    <!-- SNELSTART -->
+    <div class="help-section">
+      <div class="help-section-title">&#x1F680; Snelstart — een account in 5 stappen</div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text"><strong>Account aanmaken</strong> — Klik op de account-selector linksboven en typ een accountnaam. Druk Enter of klik "+ Voeg toe".</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text"><strong>Research</strong> — Ga naar de <span class="help-tab-badge">Research</span> tab en vraag een bedrijfsoverzicht. De agent zoekt automatisch actuele informatie op.</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text"><strong>Stakeholders</strong> — Open <span class="help-tab-badge">Account Map</span> en klik "Genereer Account Map". Importeer de rollen daarna als sjabloon in <span class="help-tab-badge">Contacten</span> en vul de echte namen in via LinkedIn.</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text"><strong>Dossier genereren</strong> — Ga naar <span class="help-tab-badge">Dossier</span> en klik "Genereer dossier". De AI vat alle agent-informatie samen in een ICP-score, personas, signalen en aanpak.</div></div>
+      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text"><strong>Sequence starten</strong> — Open <span class="help-tab-badge">Sequence</span>, selecteer een contact en genereer een outreach-sequence. De touches worden automatisch als taken aangemaakt.</div></div>
+    </div>
+
+    <!-- WORKFLOW -->
+    <div class="help-section">
+      <div class="help-section-title">&#x1F504; Aanbevolen workflow</div>
+      <div class="help-flow">
+        <span class="help-flow-item">&#x1F4C1; Account</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x1F50D; Research</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x26A1; Signals</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x1F5FA; Account Map</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x1F465; Contacten</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x1F4AC; BDR</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x1F4E7; Sequence</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x2705; Tasks</span>
+        <span class="help-flow-arrow">→</span>
+        <span class="help-flow-item">&#x1F4C8; Pipeline</span>
+      </div>
+    </div>
+
+    <!-- PER TAB -->
+    <div class="help-section">
+      <div class="help-section-title">&#x1F4CB; Per tab uitgelegd</div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F4C1; Dossier</div>
+        <div class="help-card-body">Automatische samenvatting van alle agent-informatie voor dit account. Toont ICP-score (1-10), key personas, signalen, concurrenten, deal-status en aanbevolen aanpak. Wordt automatisch gegenereerd na 3+ nieuwe agent-antwoorden, of handmatig via "Genereer dossier". <strong>De kostenpil rechtsboven</strong> toont het tokenverbruik en de kosten voor dit account.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F50D; Research</div>
+        <div class="help-card-body">Bedrijfsonderzoek via web search. Vraag een overzicht, tech stack, recent nieuws of specifieke informatie. <strong>Gebruik "👤 Personen toevoegen aan Contacten"</strong> om gevonden personen direct te importeren. Let op de ⚠️ banner: verifieer C-level functies altijd via LinkedIn.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x26A1; Signals</div>
+        <div class="help-card-body">Analyseert intent signals, hiring data en bedrijfstriggers. Alleen signalen jonger dan 12 maanden worden gebruikt. Vraag naar intent signalen, hiring voor digitalisering, of recente events. Signalen voeden automatisch het dossier.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F5FA; Account Map</div>
+        <div class="help-card-body">Genereert typische stakeholder-rollen voor dit account. <strong>Let op: dit zijn gegenereerde persona's, geen echte personen.</strong> Gebruik "Importeer rollen als sjabloon" om de structuur naar Contacten te halen en vul zelf de echte namen in.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F465; Contacten</div>
+        <div class="help-card-body">Beheer echte contactpersonen per account. <strong>Sjablonen</strong> (geïmporteerd uit Account Map) zijn oranje gemarkeerd en geblokkeerd totdat naam én email zijn ingevuld. Stel de taal per contact in (NL/FR/DE/EN) — sequences worden dan automatisch in die taal gegenereerd. Gebruik het email-formaat veld bovenaan om emailadressen automatisch te genereren.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F4AC; BDR</div>
+        <div class="help-card-body">Coaching voor positionering, pitch en outreach strategie. Vraag een elevator pitch, pain point analyse of value proposition specifiek voor dit account. Gebruikt dossier-context automatisch.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F4E7; Sequence</div>
+        <div class="help-card-body">Bouwt gepersonaliseerde multi-touch outreach sequences. <strong>Selecteer eerst een contact</strong> bovenaan — de sequence wordt dan in de taal van dat contact gegenereerd. Touches worden automatisch als taken aangemaakt. Gebruik "🗑 Verwijder" om een sequence + taken samen te verwijderen.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x2709; Email Reply</div>
+        <div class="help-card-body">Schrijft professionele email replies en follow-ups. Plak een ontvangen email of beschrijf de situatie. Gebruik de chips voor veelvoorkomende scenario's: follow-up, no-show opvolging, reactie op bezwaar.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x2705; Tasks</div>
+        <div class="help-card-body">Overzicht van alle taken gegroepeerd per contact. Touch-taken hebben een <strong>statusrij</strong>: Nog te versturen → Verstuurd → Reactie → Geen reactie. Klik op "Verstuur email" om direct Outlook te openen met de ingevulde tekst. Gebruik de filters bovenaan voor Open, Gedaan of Verlopen taken.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x1F4C8; Pipeline</div>
+        <div class="help-card-body">Deal coaching voor actieve opportunities. Vraag naar de volgende stap, deal risico's of forecast. De agent gebruikt automatisch de deal-status en aanpak uit het dossier.</div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-title">&#x2694; Battle Card & Objections</div>
+        <div class="help-card-body"><strong>Battle Card:</strong> concrete argumenten versus OutSystems, Power Platform en Appian. <strong>Objections:</strong> empathische antwoorden op prijsbezwaar, timing, geen sponsor. Gebruik FEEL-FELT-FOUND structuur als basis.</div>
+      </div>
+
+    </div>
+
+    <!-- TIPS -->
+    <div class="help-section">
+      <div class="help-section-title">&#x1F4A1; Tips & best practices</div>
+
+      <div class="help-tip">&#x26A0;&#xFE0F; <div><strong>Regio instelling:</strong> Stel de regio in de header in op "België & Lux" om te voorkomen dat agents contacten uit andere regio's voorstellen. Per account kun je een regio-override instellen in het Dossier.</div></div>
+
+      <div class="help-tip">&#x26A0;&#xFE0F; <div><strong>Contacten activeren:</strong> Sjabloon-contacten zijn geblokkeerd totdat je naam én emailadres invult. Gebruik het email-formaat veld (bijv. <code style="background:var(--b);padding:1px 4px;border-radius:3px">[first_initial].[last]@bedrijf.com</code>) om emails automatisch te genereren.</div></div>
+
+      <div class="help-tip">&#x26A0;&#xFE0F; <div><strong>Sequence taal:</strong> Stel de taal per contact in (NL/FR/DE/EN) vóór je een sequence genereert. De agent schrijft dan automatisch in de juiste taal.</div></div>
+
+      <div class="help-tip">&#x26A0;&#xFE0F; <div><strong>💡 Suggesties knop:</strong> Na een agent-antwoord verschijnt de gele "💡 Suggesties" chip. Klik hierop om 3 slimme vervolgvragen te genereren.</div></div>
+
+      <div class="help-warn">&#x1F6AB; <div><strong>Account Map personen:</strong> De Account Map genereert typische rollen, geen echte personen. Verifieer altijd via LinkedIn voordat je outreach start.</div></div>
+
+      <div class="help-warn">&#x1F6AB; <div><strong>C-level functies:</strong> Research en Signals vermelden alleen personen met recent bevestigde functies. Toch altijd verifiëren via LinkedIn — functiewijzigingen zijn niet altijd zichtbaar in de trainingsdata.</div></div>
+
+    </div>
+
+    <!-- INSTELLINGEN -->
+    <div class="help-section">
+      <div class="help-section-title">&#x2699;&#xFE0F; Instellingen</div>
+      <div class="help-card">
+        <div class="help-card-body">
+          <strong>Regio</strong> — Filtert alle agents op geografische focus (België & Lux, Benelux, DACH, etc.)<br>
+          <strong>Toon</strong> — Formeel, Direct of Casual — bepaalt de schrijfstijl van alle agents.<br>
+          <strong>Taal</strong> — Standaard taal voor agents. Kan per contact worden overschreven.<br>
+          <strong>Regio override</strong> — Per account een afwijkende regio instellen (in Dossier toolbar).<br>
+          <strong>Email formaat</strong> — Automatisch emailadressen genereren voor contacten (in Contacten toolbar).<br>
+          <strong>Export account</strong> — Downloadt JSON + Markdown van het actieve account.<br>
+          <strong>Import</strong> — Importeer een lijst accountnamen (één per regel).
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /panels -->
+
+<script>
+// =====================================================================
+// CONSTANTS
+// =====================================================================
+var STORAGE_KEY = 'mxsuite5';
+var API_URL = 'https://api.anthropic.com/v1/messages';
+var API_MODEL = 'claude-sonnet-4-20250514';
+var AGENTS = ['research','signal','mapping','bdr','sequence','email','battle','objection','pipeline'];
+
+var ROLE_COLORS = {
+  'Beslisser':           {bg:'#1a0a2e',color:'#a78bfa',border:'#7c3aed'},
+  'Champion':            {bg:'#0a2e1a',color:'#34d399',border:'#059669'},
+  'Influencer':          {bg:'#1a1a0a',color:'#fbbf24',border:'#d97706'},
+  'Blocker':             {bg:'#2e0a0a',color:'#f87171',border:'#dc2626'},
+  'Technisch Evaluator': {bg:'#0a1a2e',color:'#60a5fa',border:'#2563eb'}
+};
+
+var STATIC_STARTERS = {
+  research:  ['Geef bedrijfsoverzicht', 'Welke tech gebruiken ze?', 'Recente nieuwsartikelen'],
+  signal:    ['Zoek intent signalen', 'Hiring voor digitalisering?', 'Recente triggers & events'],
+  mapping:   ['Wie zijn de beslissers?', 'Genereer stakeholder map', 'Wie is de Champion?'],
+  bdr:       ['Maak elevator pitch', 'Wat zijn pain points?', 'Hoe positioneer ik Mendix?'],
+  sequence:  ['Bouw 5-touch sequence', 'Email + LinkedIn mix', 'Koude outreach reeks'],
+  email:     ['Schrijf follow-up mail', 'Reactie op no-show', 'Antwoord op bezwaar'],
+  battle:    ['Battle card vs OutSystems', 'Hoe win ik van Power Platform?', 'Mendix vs Appian'],
+  objection: ['Prijs is te hoog', 'We bouwen zelf', 'Geen budget dit kwartaal'],
+  pipeline:  ['Wat is de volgende stap?', 'Analyseer deal risico', 'Help met forecast']
+};
+
+// =====================================================================
+// STATE
+// =====================================================================
+var state = {
+  accounts: [],
+  activeId: null,
+  tone: 'formeel',
+  lang: 'NL',
+  region: 'België & Luxemburg'
+};
+var activeTab = 'dossier';
+var lastTouches = [];
+var currentPickerCb = null;
+var taskFilter = 'all';
+var dosDirty = {};   // {accountId: msgCount}
+
+function getRegion() {
+  var acc = getAcc();
+  return (acc && acc.regionOverride) ? acc.regionOverride : (state.region || 'België & Luxemburg');
+}
+
+// =====================================================================
+// STORAGE
+// =====================================================================
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function load() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      state.accounts = parsed.accounts || [];
+      state.activeId = parsed.activeId || null;
+      state.tone = parsed.tone || 'formeel';
+      state.lang = parsed.lang || 'NL';
+      state.region = parsed.region || 'België & Luxemburg';
+    }
+  } catch(e) {}
+  document.getElementById('sel-tone').value = state.tone;
+  document.getElementById('sel-lang').value = state.lang;
+  document.getElementById('sel-region').value = state.region;
+  renderAccList();
+  if (state.activeId) {
+    var acc = getAcc();
+    if (acc) {
+      document.getElementById('acc-name-lbl').textContent = acc.name;
+      loadAccount();
+    }
+  }
+  initSuggestions();
+  checkExpiredTasks();
+}
+
+// =====================================================================
+// ACCOUNT HELPERS
+// =====================================================================
+function getAcc() {
+  if (!state.activeId) return null;
+  for (var i = 0; i < state.accounts.length; i++) {
+    if (state.accounts[i].id === state.activeId) return state.accounts[i];
+  }
+  return null;
+}
+
+function makeAccount(name) {
+  return {
+    id: 'acc_' + Date.now(),
+    name: name,
+    regionOverride: null,
+    archived: false,
+    emailFormat: '',
+    usage: {research:0, signal:0, mapping:0, bdr:0, sequence:0, email:0, battle:0, objection:0, pipeline:0, input:0, output:0},
+    dos: {account:'', icp:'', personas:'', signals:'', competitors:'', deal:'', approach:''},
+    histories: {research:[],signal:[],mapping:[],bdr:[],sequence:[],email:[],battle:[],objection:[],pipeline:[]},
+    mapping: [],
+    contacts: [],
+    favorites: [],
+    notes: [],
+    tasks: []
+  };
+}
+
+function ensureAccFields(acc) {
+  if (!acc.histories) acc.histories = {};
+  AGENTS.forEach(function(a) {
+    if (!acc.histories[a]) acc.histories[a] = [];
+  });
+  if (!acc.mapping) acc.mapping = [];
+  if (!acc.contacts) acc.contacts = [];
+  if (!acc.favorites) acc.favorites = [];
+  if (!acc.notes) acc.notes = [];
+  if (!acc.tasks) acc.tasks = [];
+  if (acc.regionOverride === undefined) acc.regionOverride = null;
+  if (acc.archived === undefined) acc.archived = false;
+  if (acc.emailFormat === undefined) acc.emailFormat = '';
+  if (!acc.usage) acc.usage = {research:0,signal:0,mapping:0,bdr:0,sequence:0,email:0,battle:0,objection:0,pipeline:0,input:0,output:0};
+  AGENTS.forEach(function(a) { if (acc.usage[a] === undefined) acc.usage[a] = 0; });
+}
+
+function renderAccList() {
+  var list = document.getElementById('acc-menu-list');
+  list.innerHTML = '';
+
+  var active = state.accounts.filter(function(a) { return !a.archived; });
+  var archived = state.accounts.filter(function(a) { return a.archived; });
+
+  if (!active.length && !archived.length) {
+    var empty = document.createElement('div');
+    empty.style.cssText = 'color:var(--m);font-size:11px;padding:8px 10px';
+    empty.textContent = 'Nog geen accounts.';
+    list.appendChild(empty);
+    return;
+  }
+
+  function makeItem(acc) {
+    var div = document.createElement('div');
+    div.className = 'acc-item' + (acc.id === state.activeId ? ' active' : '') + (acc.archived ? ' acc-item-archived' : '');
+    var dot = document.createElement('span');
+    dot.className = 'acc-dot';
+    dot.style.cssText = 'display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0;' +
+      (acc.id === state.activeId ? 'background:var(--g)' : 'background:transparent');
+    var name = document.createElement('span');
+    name.className = 'acc-item-name';
+    name.textContent = acc.name;
+
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:2px;align-items:center';
+
+    if (acc.archived) {
+      var restore = document.createElement('button');
+      restore.className = 'acc-item-restore';
+      restore.textContent = '↩';
+      restore.title = 'Herstellen';
+      restore.addEventListener('click', function(e) {
+        e.stopPropagation();
+        acc.archived = false;
+        save(); renderAccList();
+      });
+      actions.appendChild(restore);
+    } else {
+      var arch = document.createElement('button');
+      arch.className = 'acc-item-del';
+      arch.textContent = '⊘';
+      arch.title = 'Archiveer';
+      arch.style.fontSize = '13px';
+      arch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        acc.archived = true;
+        if (state.activeId === acc.id) {
+          var next = state.accounts.find(function(a) { return !a.archived && a.id !== acc.id; });
+          state.activeId = next ? next.id : null;
+          var cur = getAcc();
+          document.getElementById('acc-name-lbl').textContent = cur ? cur.name : '-- Kies account --';
+          if (state.activeId) loadAccount();
+        }
+        save(); renderAccList();
+      });
+      actions.appendChild(arch);
+    }
+
+    var del = document.createElement('button');
+    del.className = 'acc-item-del';
+    del.textContent = '\u00D7';
+    del.title = 'Verwijder';
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      state.accounts = state.accounts.filter(function(a) { return a.id !== acc.id; });
+      if (state.activeId === acc.id) {
+        var next2 = state.accounts.find(function(a) { return !a.archived; });
+        state.activeId = next2 ? next2.id : null;
+      }
+      save(); renderAccList();
+      var cur2 = getAcc();
+      document.getElementById('acc-name-lbl').textContent = cur2 ? cur2.name : '-- Kies account --';
+      if (state.activeId) loadAccount(); else document.getElementById('dos-body').innerHTML = '';
+    });
+    actions.appendChild(del);
+
+    div.appendChild(dot);
+    div.appendChild(name);
+    div.appendChild(actions);
+    div.addEventListener('click', function() { selectAccount(acc.id); });
+    return div;
+  }
+
+  active.forEach(function(acc) { list.appendChild(makeItem(acc)); });
+
+  if (archived.length) {
+    var sep = document.createElement('div');
+    sep.className = 'acc-archive-section';
+    var lbl = document.createElement('div');
+    lbl.className = 'acc-archive-label';
+    lbl.textContent = 'Gearchiveerd';
+    sep.appendChild(lbl);
+    archived.forEach(function(acc) { sep.appendChild(makeItem(acc)); });
+    list.appendChild(sep);
+  }
+}
+
+function selectAccount(id) {
+  state.activeId = id;
+  save();
+  var acc = getAcc();
+  document.getElementById('acc-name-lbl').textContent = acc ? acc.name : '-- Kies account --';
+  document.getElementById('acc-menu').classList.remove('open');
+  loadAccount();
+}
+
+function loadAccount() {
+  var acc = getAcc();
+  if (!acc) return;
+  ensureAccFields(acc);
+  // Sync region override dropdown
+  var overrideSel = document.getElementById('acc-region-override');
+  if (overrideSel) overrideSel.value = acc.regionOverride || '';
+  var efInp = document.getElementById('email-format-inp');
+  if (efInp) efInp.value = acc.emailFormat || '';
+  // Render all chat histories
+  AGENTS.forEach(function(tab) {
+    var win = document.getElementById('chat-' + tab);
+    if (!win) return;
+    win.innerHTML = '';
+    (acc.histories[tab] || []).forEach(function(msg) {
+      appendMsg(tab, msg.role, msg.html, null, true);
+    });
+  });
+  renderDossier();
+  renderDosCostPill();
+  renderContacts();
+  renderSeqOverview();
+  renderNotes();
+  renderTasks();
+  renderFavs();
+  updateBadges();
+  populateSeqContactSel();
+  initSuggestions();
+}
+
+// =====================================================================
+// ACCOUNT SWITCHER UI
+// =====================================================================
+document.getElementById('acc-btn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('acc-menu');
+  var isOpen = menu.classList.contains('open');
+  menu.classList.toggle('open');
+  this.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    setTimeout(function() { document.getElementById('acc-new-inp').focus(); }, 50);
+  }
+});
+
+document.getElementById('acc-menu').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+document.addEventListener('click', function() {
+  document.getElementById('acc-menu').classList.remove('open');
+  document.getElementById('acc-btn').classList.remove('open');
+});
+
+function addNewAccount() {
+  var name = document.getElementById('acc-new-inp').value.trim();
+  if (!name) return;
+  var acc = makeAccount(name);
+  state.accounts.push(acc);
+  state.activeId = acc.id;
+  save();
+  document.getElementById('acc-name-lbl').textContent = acc.name;
+  document.getElementById('acc-menu').classList.remove('open');
+  document.getElementById('acc-btn').classList.remove('open');
+  document.getElementById('acc-new-inp').value = '';
+  renderAccList();
+  loadAccount();
+}
+
+document.getElementById('acc-new-btn').addEventListener('click', addNewAccount);
+
+document.getElementById('acc-new-inp').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addNewAccount();
+});
+
+// =====================================================================
+// SETTINGS
+// =====================================================================
+document.getElementById('sel-tone').addEventListener('change', function() {
+  state.tone = this.value; save();
+});
+document.getElementById('sel-lang').addEventListener('change', function() {
+  state.lang = this.value; save();
+});
+document.getElementById('dos-cost-pill').addEventListener('click', function(e) {
+  e.stopPropagation();
+  renderDosCostPill();
+  document.getElementById('dos-cost-tooltip').classList.toggle('open');
+});
+document.addEventListener('click', function() {
+  var tt = document.getElementById('dos-cost-tooltip');
+  if (tt) tt.classList.remove('open');
+});
+function generateEmail(name, format) {
+  if (!name || !format) return '';
+  // Split name into parts
+  var parts = name.trim().split(/\s+/);
+  var first = parts[0] || '';
+  var last = parts.length > 1 ? parts[parts.length - 1] : '';
+  // Normalize: lowercase, remove accents/special chars
+  function norm(s) {
+    return s.toLowerCase()
+      .replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e')
+      .replace(/[ìíîï]/g,'i').replace(/[òóôõö]/g,'o')
+      .replace(/[ùúûü]/g,'u').replace(/[ý]/g,'y')
+      .replace(/[ñ]/g,'n').replace(/[ç]/g,'c')
+      .replace(/[^a-z0-9]/g,'');
+  }
+  var f = norm(first);
+  var l = norm(last);
+  var fi = f.charAt(0);
+  var li = l.charAt(0);
+  return format
+    .replace(/\[first\]/g, f)
+    .replace(/\[last\]/g, l)
+    .replace(/\[first_initial\]/g, fi)
+    .replace(/\[last_initial\]/g, li);
+}
+
+document.getElementById('email-format-inp').addEventListener('change', function() {
+  var acc = getAcc();
+  if (!acc) return;
+  acc.emailFormat = this.value.trim();
+  save();
+});
+
+document.getElementById('email-format-apply-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) { showToast('Selecteer eerst een account.'); return; }
+  var format = document.getElementById('email-format-inp').value.trim();
+  if (!format) { showToast('Vul eerst een email formaat in.'); return; }
+  acc.emailFormat = format;
+
+  var updated = 0;
+  acc.contacts.forEach(function(c) {
+    // Only apply to contacts without an email
+    if (!c.email || !c.email.trim()) {
+      var generated = generateEmail(c.name, format);
+      if (generated) {
+        c.email = generated;
+        // Mark as having email so template activation works
+        if (c.source === 'mapping') c._nameEdited = true;
+        updated++;
+      }
+    }
+  });
+
+  save();
+  renderContacts();
+  if (updated) showToast(updated + ' email' + (updated === 1 ? '' : 's') + ' gegenereerd.');
+  else showToast('Alle contacten hebben al een emailadres.');
+});
+
+document.getElementById('sel-region').addEventListener('change', function() {
+  state.region = this.value; save();
+});
+document.getElementById('acc-region-override').addEventListener('change', function() {
+  var acc = getAcc();
+  if (!acc) return;
+  acc.regionOverride = this.value || null;
+  save();
+});
+
+// =====================================================================
+// TAB SWITCHING
+// =====================================================================
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var tab = this.getAttribute('data-tab');
+    switchTab(tab);
+  });
+});
+
+function switchTab(tab) {
+  // Auto-gen dossier check
+  if (tab === 'dossier') {
+    var acc = getAcc();
+    if (acc) {
+      var key = acc.id;
+      var cnt = 0;
+      AGENTS.forEach(function(a) { cnt += (acc.histories[a] || []).filter(function(m){ return m.role==='agent'; }).length; });
+      var prev = dosDirty[key] || 0;
+      if (cnt - prev >= 3) {
+        dosDirty[key] = cnt;
+        generateDossier();
+      }
+    }
+  }
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+  });
+  document.querySelectorAll('.panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'panel-' + tab);
+  });
+  if (tab === 'sequence') renderSeqOverview();
+  if (tab === 'search') document.getElementById('search-inp').focus();
+  if (tab === 'contacts') renderContacts();
+  if (tab === 'tasks') renderTasks();
+  if (tab === 'notes') renderNotes();
+  if (tab === 'favs') renderFavs();
+  if (tab === 'usage') renderUsageTab();
+  if (tab === 'dossier') renderDosCostPill();
+  initSuggestions();
+}
+
+// =====================================================================
+// EXPORT + RESET
+// =====================================================================
+document.getElementById('export-btn').addEventListener('click', function() {
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mendix-suite-export.json';
+  a.click();
+});
+
+// Export per account — JSON + Markdown
+document.getElementById('export-acc-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) { showToast('Selecteer eerst een account.'); return; }
+
+  // JSON export
+  var jsonBlob = new Blob([JSON.stringify(acc, null, 2)], {type:'application/json'});
+  var a1 = document.createElement('a');
+  a1.href = URL.createObjectURL(jsonBlob);
+  a1.download = acc.name.replace(/\s+/g,'_') + '_export.json';
+  a1.click();
+
+  // Markdown export
+  var md = '# ' + acc.name + '\n\n';
+  md += '## Dossier\n';
+  if (acc.dos.account) md += '**Bedrijf:** ' + acc.dos.account + '\n\n';
+  if (acc.dos.icp) md += '**ICP Score:** ' + acc.dos.icp + '\n\n';
+  if (acc.dos.personas) md += '**Personas:** ' + acc.dos.personas + '\n\n';
+  if (acc.dos.signals) md += '**Signalen:** ' + acc.dos.signals + '\n\n';
+  if (acc.dos.competitors) md += '**Concurrenten:** ' + acc.dos.competitors + '\n\n';
+  if (acc.dos.deal) md += '**Deal status:** ' + acc.dos.deal + '\n\n';
+  if (acc.dos.approach) md += '**Aanpak:** ' + acc.dos.approach + '\n\n';
+
+  if (acc.contacts && acc.contacts.length) {
+    md += '## Contacten\n';
+    acc.contacts.forEach(function(c) {
+      md += '- **' + c.name + '** (' + (c.title||'') + ') — ' + (c.role||'') + '\n';
+      if (c.email) md += '  Email: ' + c.email + '\n';
+      if (c.linkedin) md += '  LinkedIn: ' + c.linkedin + '\n';
+    });
+    md += '\n';
+  }
+
+  if (acc.notes && acc.notes.length) {
+    md += '## Notities\n';
+    acc.notes.forEach(function(n) { md += '- ' + (n.text||'') + '\n'; });
+    md += '\n';
+  }
+
+  setTimeout(function() {
+    var mdBlob = new Blob([md], {type:'text/markdown'});
+    var a2 = document.createElement('a');
+    a2.href = URL.createObjectURL(mdBlob);
+    a2.download = acc.name.replace(/\s+/g,'_') + '_dossier.md';
+    a2.click();
+  }, 300);
+});
+
+// Import accounts
+document.getElementById('import-btn').addEventListener('click', function() {
+  document.getElementById('import-overlay').classList.add('open');
+  document.getElementById('import-textarea').value = '';
+  setTimeout(function() { document.getElementById('import-textarea').focus(); }, 50);
+});
+
+document.getElementById('import-cancel-btn').addEventListener('click', function() {
+  document.getElementById('import-overlay').classList.remove('open');
+});
+
+document.getElementById('import-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+document.getElementById('import-do-btn').addEventListener('click', function() {
+  var text = document.getElementById('import-textarea').value;
+  var names = text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+  if (!names.length) { showToast('Geen accountnamen gevonden.'); return; }
+  var added = 0;
+  names.forEach(function(name) {
+    var exists = state.accounts.some(function(a) { return a.name.toLowerCase() === name.toLowerCase(); });
+    if (!exists) {
+      state.accounts.push(makeAccount(name));
+      added++;
+    }
+  });
+  save();
+  renderAccList();
+  document.getElementById('import-overlay').classList.remove('open');
+  showToast(added + ' account' + (added !== 1 ? 's' : '') + ' geïmporteerd' + (names.length - added > 0 ? ', ' + (names.length - added) + ' overgeslagen (al aanwezig).' : '.'));
+});
+
+// Expired tasks banner
+function checkExpiredTasks() {
+  var banner = document.getElementById('expired-banner');
+  var countEl = document.getElementById('expired-count');
+  var today = new Date().toISOString().substring(0, 10);
+  var count = 0;
+  state.accounts.forEach(function(acc) {
+    if (acc.archived) return;
+    (acc.tasks || []).forEach(function(t) {
+      if (!t.done && t.date && t.date < today) count++;
+    });
+  });
+  if (count > 0) {
+    countEl.textContent = count + ' verlopen ' + (count === 1 ? 'taak' : 'taken');
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+document.getElementById('expired-banner-close').addEventListener('click', function() {
+  document.getElementById('expired-banner').classList.remove('show');
+});
+
+document.getElementById('reset-tab-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) return;
+  if (activeTab === 'dossier') {
+    acc.dos = {account:'',icp:'',personas:'',signals:'',competitors:'',deal:'',approach:''};
+    renderDossier();
+  } else if (AGENTS.indexOf(activeTab) !== -1) {
+    acc.histories[activeTab] = [];
+    var win = document.getElementById('chat-' + activeTab);
+    if (win) win.innerHTML = '';
+    updateTokenCount(activeTab);
+  }
+  save();
+});
+</script>
+
+<script>
+// =====================================================================
+// CHAT / MESSAGE SYSTEM
+// =====================================================================
+function appendMsg(tab, role, html, searches, silent) {
+  var win = document.getElementById('chat-' + tab);
+  if (!win) return;
+
+  var pairId = null;
+
+  if (role === 'user') {
+    // Start a new pair wrapper
+    pairId = 'pair_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+    var pair = document.createElement('div');
+    pair.className = 'msg-pair';
+    pair.setAttribute('data-pair-id', pairId);
+    pair.setAttribute('data-tab', tab);
+
+    // Delete button
+    var delBtn = document.createElement('button');
+    delBtn.className = 'pair-del-btn';
+    delBtn.textContent = '\u00D7 Verwijder';
+    delBtn.addEventListener('click', function() {
+      confirmEl.classList.add('show');
+      delBtn.style.opacity = '0';
+    });
+    pair.appendChild(delBtn);
+
+    // Confirm bar
+    var confirmEl = document.createElement('div');
+    confirmEl.className = 'pair-confirm';
+    confirmEl.innerHTML = '<span>Verwijder dit gesprek?</span>';
+    var yes = document.createElement('button');
+    yes.className = 'pair-confirm-yes';
+    yes.textContent = 'Ja';
+    yes.addEventListener('click', function() {
+      deletePair(tab, pairId, pair);
+    });
+    var no = document.createElement('button');
+    no.className = 'pair-confirm-no';
+    no.textContent = 'Nee';
+    no.addEventListener('click', function() {
+      confirmEl.classList.remove('show');
+    });
+    confirmEl.appendChild(yes);
+    confirmEl.appendChild(no);
+    pair.appendChild(confirmEl);
+
+    // User message div
+    var userDiv = document.createElement('div');
+    userDiv.className = 'msg user';
+    userDiv.innerHTML = html;
+    pair.appendChild(userDiv);
+
+    win.appendChild(pair);
+    // Store pairId for the next agent message to find
+    win._lastPairId = pairId;
+
+  } else {
+    // Agent message — find the last open pair
+    var pairEl = win._lastPairId ? win.querySelector('[data-pair-id="' + win._lastPairId + '"]') : null;
+
+    var agentDiv = document.createElement('div');
+    agentDiv.className = 'msg agent';
+    agentDiv.innerHTML = html;
+
+    // Star button
+    var star = document.createElement('button');
+    star.className = 'star-btn';
+    star.textContent = '\u2605';
+    star.title = 'Opslaan als favoriet';
+    star.addEventListener('click', function() {
+      addFavorite(tab, html);
+      star.classList.add('starred');
+      star.title = 'Opgeslagen!';
+    });
+    agentDiv.appendChild(star);
+
+    // Person extract button — only on Research tab
+    if (tab === 'research') {
+      var extractBtn = document.createElement('button');
+      extractBtn.className = 'person-extract-btn';
+      extractBtn.textContent = '\uD83D\uDC64 Personen toevoegen aan Contacten';
+      var capturedHtml = html;
+      extractBtn.addEventListener('click', function() {
+        openPersonExtract(capturedHtml);
+      });
+      agentDiv.appendChild(document.createElement('br'));
+      agentDiv.appendChild(extractBtn);
+    }
+
+    // Search sources
+    if (searches && searches.length) {
+      var srcDiv = document.createElement('div');
+      srcDiv.style.marginTop = '8px';
+      searches.forEach(function(s) {
+        var chip = document.createElement('span');
+        chip.className = 'src-chip';
+        chip.textContent = s;
+        srcDiv.appendChild(chip);
+      });
+      agentDiv.appendChild(srcDiv);
+    }
+
+    if (pairEl) {
+      pairId = win._lastPairId;
+      pairEl.appendChild(agentDiv);
+      win._lastPairId = null; // pair is now complete
+    } else {
+      // Orphan agent message (e.g. loaded from history without pairing) — wrap solo
+      pairId = 'pair_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+      var soloPair = document.createElement('div');
+      soloPair.className = 'msg-pair';
+      soloPair.setAttribute('data-pair-id', pairId);
+      soloPair.setAttribute('data-tab', tab);
+      soloPair.appendChild(agentDiv);
+      win.appendChild(soloPair);
+    }
+  }
+
+  if (!silent) win.scrollTop = win.scrollHeight;
+
+  // Save to history
+  if (!silent) {
+    var acc = getAcc();
+    if (acc && AGENTS.indexOf(tab) !== -1) {
+      if (!acc.histories[tab]) acc.histories[tab] = [];
+      acc.histories[tab].push({role: role, html: html, pairId: pairId});
+      save();
+      updateTokenCount(tab);
+      updateBadges();
+    }
+  }
+}
+
+function deletePair(tab, pairId, pairEl) {
+  var acc = getAcc();
+  if (!acc) return;
+  // Remove from history (all entries with this pairId)
+  acc.histories[tab] = (acc.histories[tab] || []).filter(function(m) {
+    return m.pairId !== pairId;
+  });
+  save();
+  updateTokenCount(tab);
+  updateBadges();
+  // Animate out
+  pairEl.style.transition = 'opacity .25s';
+  pairEl.style.opacity = '0';
+  setTimeout(function() { pairEl.remove(); }, 260);
+}
+
+function showTyping(tab) {
+  var el = document.getElementById('typing-' + tab);
+  if (el) el.style.display = 'flex';
+  var win = document.getElementById('chat-' + tab);
+  if (win) win.scrollTop = win.scrollHeight;
+}
+
+function hideTyping(tab) {
+  var el = document.getElementById('typing-' + tab);
+  if (el) el.style.display = 'none';
+}
+
+function updateTokenCount(tab) {
+  var el = document.getElementById('tok-' + tab);
+  if (!el) return;
+  var acc = getAcc();
+  if (!acc) { el.textContent = '0 tok'; return; }
+  var hist = acc.histories[tab] || [];
+  var chars = 0;
+  hist.forEach(function(m) { chars += m.html.length; });
+  el.textContent = Math.round(chars / 4) + ' tok';
+}
+
+function updateBadges() {
+  AGENTS.forEach(function(tab) {
+    var el = document.getElementById('badge-' + tab);
+    if (!el) return;
+    var acc = getAcc();
+    if (!acc) { el.textContent = ''; return; }
+    var cnt = (acc.histories[tab] || []).filter(function(m) { return m.role === 'agent'; }).length;
+    el.textContent = cnt ? '\u25CF' : '';
+  });
+}
+
+// =====================================================================
+// BUILD PROMPT — per-agent focused context
+// =====================================================================
+
+// What each agent actually needs from the dossier
+var AGENT_DOS_FIELDS = {
+  research:  ['account'],
+  signal:    ['account', 'signals'],
+  mapping:   ['account', 'personas'],
+  bdr:       ['account', 'icp', 'personas', 'signals', 'approach'],
+  sequence:  ['account', 'personas', 'signals', 'approach'],
+  email:     ['account', 'personas', 'deal'],
+  battle:    ['account', 'competitors'],
+  objection: ['account', 'icp', 'deal', 'competitors'],
+  pipeline:  ['account', 'icp', 'deal', 'approach']
+};
+
+function buildPrompt(tab, userMsg) {
+  var acc = getAcc();
+  var accName = acc ? acc.name : 'onbekend';
+  var region = getRegion();
+
+  var ctx = 'Account: ' + accName + ' | Regio: ' + region + '\n';
+
+  // Only inject dossier fields relevant to this agent
+  if (acc && acc.dos) {
+    var fields = AGENT_DOS_FIELDS[tab] || ['account'];
+    var dosLines = [];
+    var labels = {
+      account: 'Bedrijf', icp: 'ICP', personas: 'Personas',
+      signals: 'Signalen', competitors: 'Concurrenten',
+      deal: 'Deal', approach: 'Aanpak'
+    };
+    fields.forEach(function(f) {
+      if (acc.dos[f]) dosLines.push(labels[f] + ': ' + acc.dos[f]);
+    });
+    if (dosLines.length) ctx += dosLines.join('\n') + '\n';
+  }
+
+  // Sequence: add selected contact with language
+  if (tab === 'sequence') {
+    var sel = document.getElementById('seq-contact-sel');
+    if (sel && sel.value) {
+      var cid = sel.value;
+      if (acc) {
+        var con = null;
+        for (var i = 0; i < acc.contacts.length; i++) {
+          if (acc.contacts[i].id === cid) { con = acc.contacts[i]; break; }
+        }
+        if (con) {
+          var contactLang = con.lang || state.lang;
+          ctx += '\nContact: ' + con.name + ' (' + con.title + ')' +
+            ' | Rol: ' + (con.role || '') +
+            ' | Insight: ' + (con.insight || '') +
+            '\nTaal: ' + contactLang + ' — schrijf ALLE touches in het ' +
+            (contactLang === 'NL' ? 'Nederlands' :
+             contactLang === 'FR' ? 'Frans' :
+             contactLang === 'DE' ? 'Duits' : 'Engels') + '\n';
+        }
+      }
+    }
+  }
+
+  return ctx;
+}
+
+// =====================================================================
+// SYSTEM PROMPTS
+// =====================================================================
+function getSysPrompt(tab) {
+  var lang = state.lang;
+  var tone = state.tone;
+  var region = getRegion();
+
+  // Compact shared base — no repetition across agents
+  var base = 'Mendix BDR AI | Low-code platform (Siemens) | ' +
+    'Regio: ' + region + ' | Toon: ' + tone + ' | Taal: ' + lang + '. ' +
+    'Antwoorden in HTML (<strong>,<ul>,<li>,<br>,<table>). ' +
+    'Houd je strikt aan de regio tenzij anders gevraagd.';
+
+  // Agent-specific instructions — focused, no base repetition
+  var specific = {
+    research:
+      'Bedrijfsonderzoek voor Mendix prospecting. Geef concrete inzichten over digitale transformatie en Mendix-kansen. ' +
+      'Vermeld alleen personen met recent bevestigde functie (< 12 maanden). Noteer altijd het jaar van de informatie.',
+    signal:
+      'Analyseer intent signals, hiring en bedrijfsgebeurtenissen die Mendix-kansen aangeven. ' +
+      'Gebruik alleen signalen < 12 maanden oud. Vermeld datum per signaal. Negeer signalen > 2 jaar.',
+    mapping:
+      'Breng stakeholders in kaart voor het Mendix koopproces. Geef alleen lokale beslissers. ' +
+      'Rollen: Beslisser, Champion, Influencer, Blocker, Technisch Evaluator.',
+    bdr:
+      'Mendix BDR coach. Help met pitch, positionering en outreach. ' +
+      'USPs: snelheid, enterprise-grade, Siemens-backing, citizen + pro dev.',
+    sequence:
+      'Bouw gepersonaliseerde outreach sequences. ' +
+      'VERPLICHT FORMAT:\n===TOUCH_START===\nTOUCH: [n]\nKANAAL: [Email|LinkedIn|Bel]\nDAG: [n]\nONDERWERP: [bij Email]\nBODY:\n[tekst]\nCTA: [actie]\n===TOUCH_END===\nGeen tekst buiten dit format.',
+    email:
+      'Schrijf professionele Mendix sales emails en follow-ups. Duidelijke CTA, gepersonaliseerde toon.',
+    battle:
+      'Competitive intelligence. Mendix vs OutSystems (legacy/pricing), Power Platform (governance), Appian (dev flex). ' +
+      'Geef concrete battlecard argumenten.',
+    objection:
+      'Objection handling coach. Empathische, data-onderbouwde antwoorden. Gebruik FEEL-FELT-FOUND waar relevant.',
+    pipeline:
+      'Deal coach. Analyseer pipeline, identificeer risicos, adviseer over volgende stappen en deal acceleration.'
+  };
+
+  return base + '\n' + (specific[tab] || '');
+}
+
+// =====================================================================
+// MAIN SEND FUNCTION
+// =====================================================================
+function send(tab) {
+  var acc = getAcc();
+  if (!acc) { alert('Selecteer eerst een account.'); return; }
+
+  var inpEl = document.getElementById('inp-' + tab);
+  if (!inpEl) return;
+  var msg = inpEl.value.trim();
+  if (!msg) return;
+  inpEl.value = '';
+
+  var ctx = buildPrompt(tab, msg);
+  var fullMsg = ctx ? ctx + '\n\nVraag: ' + msg : msg;
+
+  appendMsg(tab, 'user', escHtml(msg));
+
+  // Build API messages — per-agent history limits (balances context quality vs token cost)
+  var hist = (acc.histories[tab] || []).slice();
+  var apiMsgs = [];
+  var HISTORY_LIMITS = {
+    research: 4, signal: 4, mapping: 6, bdr: 6,
+    sequence: 10, email: 8, battle: 4, objection: 4, pipeline: 8
+  };
+  var limit = Math.min(hist.length, HISTORY_LIMITS[tab] || 6);
+  var slice = hist.slice(-limit);
+  // Make sure last is user
+  while (slice.length && slice[slice.length-1].role !== 'user') {
+    slice.pop();
+  }
+  slice.forEach(function(m) {
+    apiMsgs.push({role: m.role === 'user' ? 'user' : 'assistant', content: stripHtml(m.html)});
+  });
+
+  // Add current message
+  apiMsgs.push({role:'user', content: fullMsg});
+
+  showTyping(tab);
+
+  var tools = [{type:'web_search_20250305', name:'web_search'}];
+
+  // Per-agent output token limits — tuned to typical response needs
+  var OUTPUT_LIMITS = {
+    research: 2000, signal: 1500, mapping: 1000, bdr: 1200,
+    sequence: 2500, email: 1000, battle: 1000, objection: 800, pipeline: 1200
+  };
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: API_MODEL,
+      max_tokens: OUTPUT_LIMITS[tab] || 1500,
+      system: getSysPrompt(tab),
+      tools: tools,
+      messages: apiMsgs
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    hideTyping(tab);
+    if (data.error) {
+      appendMsg(tab, 'agent', '<span style="color:var(--err)">Fout: ' + escHtml(data.error.message || 'API error') + '</span>');
+      return;
+    }
+    // Track token usage
+    if (data.usage) {
+      var acc = getAcc();
+      if (acc) {
+        ensureAccFields(acc);
+        var inp = data.usage.input_tokens || 0;
+        var out = data.usage.output_tokens || 0;
+        acc.usage.input += inp;
+        acc.usage.output += out;
+        if (acc.usage[tab] !== undefined) acc.usage[tab] += inp + out;
+        save();
+        renderDosCostPill();
+      }
+    }
+    var text = '';
+    var searches = [];
+    if (data.content && data.content.length) {
+      data.content.forEach(function(block) {
+        if (block.type === 'text') text += block.text;
+        if (block.type === 'tool_result') {
+          try {
+            var res = JSON.parse(block.content[0].text);
+            if (res && res.results) {
+              res.results.slice(0, 3).forEach(function(r) { if(r.title) searches.push(r.title); });
+            }
+          } catch(e) {}
+        }
+      });
+    }
+    if (!text) text = 'Geen antwoord ontvangen.';
+
+    var html = formatAgentText(text);
+
+    // Special handling for sequence tab
+    if (tab === 'sequence') {
+      html = parseSequenceTouches(text, html);
+    }
+
+    appendMsg(tab, 'agent', html, searches.slice(0,3));
+    lastResponseText[tab] = text; // store for on-demand suggestions
+  })
+  .catch(function(err) {
+    hideTyping(tab);
+    appendMsg(tab, 'agent', '<span style="color:var(--err)">Verbindingsfout: ' + escHtml(err.message) + '</span>');
+  });
+}
+
+// =====================================================================
+// TEXT FORMATTING HELPERS
+// =====================================================================
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function copyText(text, successCb) {
+  // Modern clipboard API (HTTPS / desktop)
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (successCb) successCb();
+    }).catch(function() {
+      copyFallback(text, successCb);
+    });
+  } else {
+    copyFallback(text, successCb);
+  }
+}
+
+function copyFallback(text, successCb) {
+  // Android webviews require the element to be visible for selection to work
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  // Position off-screen but not hidden — Android won't select hidden elements
+  ta.style.cssText = 'position:fixed;top:-9999px;left:0;width:1px;height:1px;font-size:16px;border:none;outline:none;background:transparent;color:transparent';
+  document.body.appendChild(ta);
+
+  // iOS needs a range selection, Android needs focus+select
+  var range = document.createRange();
+  range.selectNodeContents(ta);
+  var sel = window.getSelection();
+  if (sel) {
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  ta.focus();
+  ta.setSelectionRange(0, text.length);
+
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) {}
+
+  document.body.removeChild(ta);
+  if (sel) sel.removeAllRanges();
+
+  if (ok) {
+    if (successCb) successCb();
+  } else {
+    showToast('Kopieer mislukt — selecteer tekst handmatig.');
+  }
+}
+
+// =====================================================================
+// PRICING & USAGE
+// =====================================================================
+var PRICE_INPUT_PER_M  = 3.00;   // USD per 1M input tokens (Sonnet 4.6)
+var PRICE_OUTPUT_PER_M = 15.00;  // USD per 1M output tokens
+var USD_TO_EUR = 0.92;
+
+function calcCostEur(inputTok, outputTok) {
+  var usd = (inputTok / 1e6) * PRICE_INPUT_PER_M + (outputTok / 1e6) * PRICE_OUTPUT_PER_M;
+  return usd * USD_TO_EUR;
+}
+
+function fmtTok(n) {
+  if (!n) return '0';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function fmtEur(n) {
+  if (!n) return '€0,00';
+  if (n < 0.01) return '< €0,01';
+  return '€' + n.toFixed(2).replace('.', ',');
+}
+
+function getAccTotalTok(acc) {
+  if (!acc || !acc.usage) return {inp:0, out:0};
+  return {inp: acc.usage.input || 0, out: acc.usage.output || 0};
+}
+
+function renderDosCostPill() {
+  var acc = getAcc();
+  var tokLbl = document.getElementById('pill-tok-lbl');
+  var costLbl = document.getElementById('pill-cost-lbl');
+  var breakdown = document.getElementById('dos-cost-breakdown');
+  if (!tokLbl || !costLbl) return;
+  if (!acc || !acc.usage) {
+    tokLbl.textContent = '0 tok';
+    costLbl.textContent = '€0,00';
+    if (breakdown) breakdown.innerHTML = '';
+    return;
+  }
+  var t = getAccTotalTok(acc);
+  var total = t.inp + t.out;
+  var cost = calcCostEur(t.inp, t.out);
+  tokLbl.textContent = fmtTok(total) + ' tok';
+  costLbl.textContent = fmtEur(cost);
+
+  // Build breakdown tooltip
+  if (breakdown) {
+    var maxTok = 0;
+    AGENTS.forEach(function(a) { if ((acc.usage[a]||0) > maxTok) maxTok = acc.usage[a]; });
+    var html = '';
+    AGENTS.forEach(function(a) {
+      var tok = acc.usage[a] || 0;
+      if (!tok) return;
+      var pct = maxTok ? Math.round((tok / maxTok) * 100) : 0;
+      // Assume ~70% input, 30% output ratio per agent
+      var agentCost = calcCostEur(tok * 0.7, tok * 0.3);
+      html += '<div class="usage-agent-row">' +
+        '<span class="usage-agent-name">' + a + '</span>' +
+        '<div class="usage-bar-wrap"><div class="usage-bar" style="width:' + pct + '%"></div></div>' +
+        '<span class="usage-agent-tok">' + fmtTok(tok) + '</span>' +
+        '<span class="usage-agent-cost">' + fmtEur(agentCost) + '</span>' +
+        '</div>';
+    });
+    breakdown.innerHTML = html || '<div style="color:var(--m);font-size:11px">Nog geen verbruik.</div>';
+  }
+}
+
+function renderUsageTab() {
+  var body = document.getElementById('usage-body');
+  if (!body) return;
+
+  var totalInp = 0, totalOut = 0;
+  state.accounts.forEach(function(acc) {
+    ensureAccFields(acc);
+    totalInp += acc.usage.input || 0;
+    totalOut += acc.usage.output || 0;
+  });
+  var totalCost = calcCostEur(totalInp, totalOut);
+  var totalTok = totalInp + totalOut;
+
+  var html = '<div class="usage-total-card">' +
+    '<div><div class="usage-total-num">' + fmtEur(totalCost) + '</div><div class="usage-total-sub">Totale kosten alle accounts</div></div>' +
+    '<div style="width:1px;height:36px;background:var(--b2)"></div>' +
+    '<div><div class="usage-total-num" style="color:var(--c)">' + fmtTok(totalTok) + '</div><div class="usage-total-sub">Totaal tokens</div></div>' +
+    '<div style="width:1px;height:36px;background:var(--b2)"></div>' +
+    '<div><div class="usage-total-num" style="color:var(--y)">' + state.accounts.length + '</div><div class="usage-total-sub">Accounts</div></div>' +
+    '</div>';
+
+  // Sort accounts by cost descending
+  var sorted = state.accounts.slice().sort(function(a, b) {
+    var ca = calcCostEur(a.usage ? a.usage.input||0 : 0, a.usage ? a.usage.output||0 : 0);
+    var cb = calcCostEur(b.usage ? b.usage.input||0 : 0, b.usage ? b.usage.output||0 : 0);
+    return cb - ca;
+  });
+
+  sorted.forEach(function(acc) {
+    ensureAccFields(acc);
+    var t = getAccTotalTok(acc);
+    var tok = t.inp + t.out;
+    var cost = calcCostEur(t.inp, t.out);
+    var accId = 'ua_' + acc.id;
+
+    // Max agent for bar scaling
+    var maxAgTok = 0;
+    AGENTS.forEach(function(a) { if ((acc.usage[a]||0) > maxAgTok) maxAgTok = acc.usage[a]; });
+
+    var agentRows = '';
+    AGENTS.forEach(function(a) {
+      var atk = acc.usage[a] || 0;
+      if (!atk) return;
+      var pct = maxAgTok ? Math.round((atk / maxAgTok) * 100) : 0;
+      var acost = calcCostEur(atk * 0.7, atk * 0.3);
+      agentRows += '<div class="usage-agent-row">' +
+        '<span class="usage-agent-name">' + a + '</span>' +
+        '<div class="usage-bar-wrap"><div class="usage-bar" style="width:' + pct + '%"></div></div>' +
+        '<span class="usage-agent-tok">' + fmtTok(atk) + '</span>' +
+        '<span class="usage-agent-cost">' + fmtEur(acost) + '</span>' +
+        '</div>';
+    });
+    if (!agentRows) agentRows = '<div style="color:var(--m);font-size:11px;padding:4px 0">Nog geen verbruik voor dit account.</div>';
+
+    html += '<div class="usage-acc-card">' +
+      '<div class="usage-acc-header" onclick="toggleUsageDetail(\'' + accId + '\')">' +
+        '<span class="usage-acc-name">' + escHtml(acc.name) + '</span>' +
+        '<span class="usage-acc-cost">' + fmtEur(cost) + '</span>' +
+        '<span class="usage-acc-tok">' + fmtTok(tok) + ' tok</span>' +
+        '<span class="usage-acc-chevron" id="chev_' + accId + '">&#x25BC;</span>' +
+      '</div>' +
+      '<div class="usage-acc-detail" id="' + accId + '">' +
+        '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--m);margin-bottom:6px;padding:0 0 4px 0;border-bottom:1px solid var(--b)">' +
+          '<span>Agent</span><span style="margin-left:auto;margin-right:12px">Tokens</span><span>Kosten</span>' +
+        '</div>' +
+        agentRows +
+      '</div>' +
+    '</div>';
+  });
+
+  body.innerHTML = html;
+}
+
+function toggleUsageDetail(id) {
+  var el = document.getElementById(id);
+  var chev = document.getElementById('chev_' + id);
+  if (!el) return;
+  el.classList.toggle('open');
+  if (chev) chev.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+// =====================================================================
+// PERSON EXTRACTION FROM RESEARCH
+// =====================================================================
+var pextractPersons = [];
+
+function openPersonExtract(html) {
+  var acc = getAcc();
+  if (!acc) return;
+
+  var listEl = document.getElementById('pextract-list');
+  listEl.innerHTML = '<div id="pextract-loading">&#x23F3; Personen zoeken in tekst...</div>';
+  document.getElementById('pextract-import').disabled = true;
+  document.getElementById('pextract-overlay').classList.add('open');
+  pextractPersons = [];
+
+  var plainText = stripHtml(html);
+  var region = getRegion();
+
+  var sysPrompt = 'Extraheer alle echte personen met naam en functie uit de tekst. ' +
+    'Geef ALLEEN een JSON array: [{"name":"...","title":"...","role":"...","confirmed_date":"..."}] ' +
+    'confirmed_date = het jaar of de periode waarop de functie bevestigd is (bijv. "2025", "Q1 2024", "onbekend"). ' +
+    'Rol moet een van deze zijn: Beslisser, Champion, Influencer, Blocker, Technisch Evaluator. ' +
+    'Als een persoon geen duidelijke naam heeft (alleen functietitel), sla dan over. ' +
+    'Geef een lege array [] als er geen echte personen zijn. Geen andere tekst.';
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: API_MODEL,
+      max_tokens: 500,
+      system: sysPrompt,
+      messages: [{role:'user', content: 'Regio: ' + region + '\n\nTekst:\n' + plainText.substring(0, 2000)}]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var text = '';
+    data.content && data.content.forEach(function(b) { if (b.type === 'text') text += b.text; });
+    text = text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+
+    var persons = [];
+    try {
+      var s = text.indexOf('['), e = text.lastIndexOf(']');
+      if (s !== -1 && e > s) persons = JSON.parse(text.substring(s, e+1));
+    } catch(err) {}
+
+    renderPersonExtractList(persons, acc);
+  })
+  .catch(function() {
+    listEl.innerHTML = '<div style="color:var(--err);padding:16px;font-size:12px">Fout bij ophalen personen.</div>';
+  });
+}
+
+function renderPersonExtractList(persons, acc) {
+  var listEl = document.getElementById('pextract-list');
+  listEl.innerHTML = '';
+  pextractPersons = persons;
+
+  if (!persons.length) {
+    listEl.innerHTML = '<div style="color:var(--m);padding:16px;font-size:12px">Geen herkenbare personen gevonden in deze tekst.</div>';
+    return;
+  }
+
+  persons.forEach(function(p, idx) {
+    // Check if there's a matching template in Account Map
+    var matchedTemplate = null;
+    if (acc.mapping && acc.mapping.length) {
+      for (var i = 0; i < acc.mapping.length; i++) {
+        var m = acc.mapping[i];
+        if (m.role === p.role || (m.title && p.title && m.title.toLowerCase().indexOf(p.title.toLowerCase().substring(0,8)) !== -1)) {
+          // Check not already claimed
+          var alreadyClaimed = acc.contacts.some(function(c) { return c._mappingIdx === i && c._nameEdited; });
+          if (!alreadyClaimed) { matchedTemplate = {mapping: m, idx: i}; break; }
+        }
+      }
+    }
+
+    var isDuplicate = acc.contacts.some(function(c) {
+      return c.name && p.name && c.name.trim().toLowerCase() === p.name.trim().toLowerCase();
+    });
+
+    var matchHtml = isDuplicate
+      ? '<div class="pextract-match" style="color:var(--err)">\u26A0 Al aanwezig in Contacten</div>'
+      : (matchedTemplate
+        ? '<div class="pextract-match">\u21AA Koppelt aan sjabloon: ' + escHtml(matchedTemplate.mapping.title) + '</div>'
+        : (acc.mapping && acc.mapping.length ? '<div class="pextract-match" style="color:var(--m)">Nieuw contact</div>' : '<div class="pextract-match" style="color:var(--c)">Direct actief contact</div>'));
+
+    var item = document.createElement('div');
+    item.className = 'pextract-item' + (isDuplicate ? ' duplicate' : '');
+    if (isDuplicate) item.style.opacity = '0.5';
+    item.setAttribute('data-idx', idx);
+    item.setAttribute('data-duplicate', isDuplicate ? '1' : '0');
+    item.innerHTML =
+      '<div class="pextract-check"></div>' +
+      '<div class="pextract-info">' +
+        '<div class="pextract-name">' + escHtml(p.name) + '</div>' +
+        '<div class="pextract-title">' + escHtml(p.title || '') + '</div>' +
+        '<div class="pextract-role">' + escHtml(p.role || '') + '</div>' +
+        '<div style="font-size:10px;margin-top:3px;color:' + (p.confirmed_date && p.confirmed_date !== 'onbekend' ? 'var(--g)' : 'var(--err)') + '">' +
+          '&#x1F4C5; Bevestigd: ' + escHtml(p.confirmed_date || 'onbekend') + 
+          (p.confirmed_date === 'onbekend' ? ' — verifieer via LinkedIn' : '') +
+        '</div>' +
+        matchHtml +
+      '</div>';
+
+    item.addEventListener('click', function() {
+      if (item.getAttribute('data-duplicate') === '1') return; // can't select duplicates
+      item.classList.toggle('selected');
+      var check = item.querySelector('.pextract-check');
+      if (item.classList.contains('selected')) check.textContent = '\u2713';
+      else check.textContent = '';
+      // Enable import button if any selected
+      var anySelected = document.querySelectorAll('.pextract-item.selected').length > 0;
+      document.getElementById('pextract-import').disabled = !anySelected;
+    });
+
+    listEl.appendChild(item);
+  });
+}
+
+function importExtractedPersons() {
+  var acc = getAcc();
+  if (!acc) return;
+  var selected = document.querySelectorAll('.pextract-item.selected');
+  var added = 0;
+  var skipped = 0;
+
+  selected.forEach(function(item) {
+    var idx = parseInt(item.getAttribute('data-idx'));
+    var p = pextractPersons[idx];
+    if (!p) return;
+
+    // Duplicate check — case-insensitive name match
+    var isDuplicate = acc.contacts.some(function(c) {
+      return c.name && p.name && c.name.trim().toLowerCase() === p.name.trim().toLowerCase();
+    });
+    if (isDuplicate) { skipped++; return; }
+
+    // Find matching template
+    var templateIdx = -1;
+    if (acc.mapping && acc.mapping.length) {
+      for (var i = 0; i < acc.mapping.length; i++) {
+        var m = acc.mapping[i];
+        if (m.role === p.role || (m.title && p.title && m.title.toLowerCase().indexOf(p.title.toLowerCase().substring(0,8)) !== -1)) {
+          var alreadyClaimed = acc.contacts.some(function(c) { return c._mappingIdx === i && c._nameEdited; });
+          if (!alreadyClaimed) { templateIdx = i; break; }
+        }
+      }
+    }
+
+    if (templateIdx !== -1) {
+      var template = acc.mapping[templateIdx];
+      var existing = null;
+      for (var j = 0; j < acc.contacts.length; j++) {
+        if (acc.contacts[j].source === 'mapping' && acc.contacts[j].role === template.role && !acc.contacts[j]._nameEdited) {
+          existing = acc.contacts[j]; break;
+        }
+      }
+      if (existing) {
+        existing.name = p.name;
+        existing.title = p.title || existing.title;
+        existing._nameEdited = true;
+        existing._mappingIdx = templateIdx;
+        existing.source = 'research';
+      } else {
+        acc.contacts.push({
+          id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+          name: p.name, title: p.title || template.title,
+          role: p.role || template.role,
+          email: '', phone: '', linkedin: '',
+          insight: template.insight || '', strategy: template.strategy || '',
+          source: 'research', _nameEdited: true, _mappingIdx: templateIdx, sequences: []
+        });
+      }
+    } else {
+      acc.contacts.push({
+        id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+        name: p.name, title: p.title || '',
+        role: p.role || 'Influencer',
+        email: '', phone: '', linkedin: '',
+        insight: '', strategy: '',
+        source: 'research', _nameEdited: true, sequences: []
+      });
+    }
+    added++;
+  });
+
+  save();
+  document.getElementById('pextract-overlay').classList.remove('open');
+  renderContacts();
+  populateSeqContactSel();
+  if (added && !skipped) showToast(added + ' persoon/personen toegevoegd.');
+  else if (added && skipped) showToast(added + ' toegevoegd, ' + skipped + ' overgeslagen (al aanwezig).');
+  else if (skipped) showToast('Overgeslagen — alle geselecteerde personen staan al in Contacten.');
+}
+
+// Modal event handlers
+document.getElementById('pextract-close').addEventListener('click', function() {
+  document.getElementById('pextract-overlay').classList.remove('open');
+});
+document.getElementById('pextract-cancel').addEventListener('click', function() {
+  document.getElementById('pextract-overlay').classList.remove('open');
+});
+document.getElementById('pextract-import').addEventListener('click', importExtractedPersons);
+document.getElementById('pextract-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid var(--b2);color:var(--t);padding:10px 18px;border-radius:8px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.style.opacity = '0'; }, 2500);
+}
+
+function stripHtml(html) {
+  var div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
+}
+
+function formatAgentText(text) {
+  // Normalize whitespace first: collapse 3+ newlines to max 2
+  text = text.replace(/\n{3,}/g, '\n\n');
+  // Trim trailing spaces on each line
+  text = text.replace(/[ \t]+\n/g, '\n');
+
+  var hasHtmlTags = /<(strong|em|ul|ol|li|h[1-6]|p|br|hr|b|i|table|tr|td|th)[\s>]/i.test(text) || text.indexOf('<br>') !== -1 || text.indexOf('<strong>') !== -1;
+
+  if (hasHtmlTags) {
+    var safe = text
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+      .replace(/on\w+="[^"]*"/gi, '')
+      .replace(/on\w+='[^']*'/gi, '');
+    // Collapse multiple <br> tags into max two
+    safe = safe.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+    // Strip <br> tags immediately before block elements (table, h3, h4, ul)
+    safe = safe.replace(/(<br\s*\/?>\s*)+(<table[\s>])/gi, '$2');
+    safe = safe.replace(/(<br\s*\/?>\s*)+(<h[1-6][\s>])/gi, '$2');
+    safe = safe.replace(/(<br\s*\/?>\s*)+(<ul[\s>])/gi, '$2');
+    // Convert remaining bare newlines
+    safe = safe.replace(/\n\n/g, '<br><br>');
+    safe = safe.replace(/\n/g, '<br>');
+    return safe;
+  }
+
+  // Markdown path
+  var html = escHtml(text);
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  // Max one blank line between paragraphs
+  html = html.replace(/\n\n/g, '<br><br>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+</script>
+
+<script>
+// =====================================================================
+// DOSSIER
+// =====================================================================
+window._dosRows = {};
+
+function generateDossier() {
+  var acc = getAcc();
+  if (!acc) return;
+
+  var sysPrompt = 'Mendix account analyse. Retourneer ALLEEN deze XML tags, geen andere tekst:\n' +
+    '<account>2 zinnen</account><icp>X/10 + 1 zin reden</icp><personas>titel1,titel2</personas>' +
+    '<signals>signaal1,signaal2</signals><competitors>comp1,comp2</competitors>' +
+    '<deal>1 zin status</deal><approach>2 zinnen aanpak</approach>';
+
+  // Build context from all agent histories — only last agent response per tab, max 200 chars
+  var ctx = 'Account: ' + acc.name + '\n\n';
+  AGENTS.forEach(function(a) {
+    var hist = acc.histories[a] || [];
+    var agentMsgs = hist.filter(function(m) { return m.role === 'agent'; });
+    if (agentMsgs.length) {
+      var last = agentMsgs[agentMsgs.length - 1];
+      var snippet = stripHtml(last.html).replace(/\s+/g,' ').trim().substring(0, 200);
+      if (snippet) ctx += '[' + a.toUpperCase() + '] ' + snippet + '\n';
+    }
+  });
+
+  var dosBody = document.getElementById('dos-body');
+  dosBody.innerHTML = '<div style="color:var(--m);font-size:12px;padding:20px">Dossier genereren...</div>';
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: API_MODEL,
+      max_tokens: 2000,
+      system: sysPrompt,
+      messages: [{role:'user', content: ctx + '\nVul de XML tags in voor dit account.'}]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { dosBody.innerHTML = '<div style="color:var(--err)">Fout: ' + escHtml(data.error.message) + '</div>'; return; }
+    var text = '';
+    if (data.content && data.content.length) {
+      data.content.forEach(function(b) { if (b.type === 'text') text += b.text; });
+    }
+    parseDossier(text, acc);
+    renderDossier();
+    save();
+  })
+  .catch(function(err) {
+    dosBody.innerHTML = '<div style="color:var(--err)">Fout: ' + escHtml(err.message) + '</div>';
+  });
+}
+
+function parseDossier(text, acc) {
+  function extract(tag) {
+    var open = '<' + tag + '>';
+    var close = '</' + tag + '>';
+    var s = text.indexOf(open);
+    var e = text.indexOf(close);
+    if (s === -1 || e === -1) return '';
+    return text.substring(s + open.length, e).trim();
+  }
+  acc.dos.account    = extract('account');
+  acc.dos.icp        = extract('icp');
+  acc.dos.personas   = extract('personas');
+  acc.dos.signals    = extract('signals');
+  acc.dos.competitors= extract('competitors');
+  acc.dos.deal       = extract('deal');
+  acc.dos.approach   = extract('approach');
+}
+
+function renderDossier() {
+  var acc = getAcc();
+  var dosBody = document.getElementById('dos-body');
+  if (!acc) {
+    dosBody.innerHTML = '<div style="color:var(--m);font-size:12px;padding:20px">Selecteer of maak een account aan.</div>';
+    return;
+  }
+  var dos = acc.dos;
+  window._dosRows = {};
+  var html = '<div class="dos-grid">';
+
+  // Account card
+  html += makeDoCard('Account', dos.account, 'account', false);
+
+  // ICP card with badge
+  var icpNum = parseInt((dos.icp || '0').match(/\d+/) ? (dos.icp || '0').match(/\d+/)[0] : '0');
+  var icpClass = icpNum >= 7 ? 'icp-green' : (icpNum >= 4 ? 'icp-yellow' : 'icp-red');
+  var icpFull = dos.icp || '-';
+  // Extract just the score for the badge label, show /10 scale explicitly
+  var icpScoreMatch = icpFull.match(/(\d+)\s*\/?\s*10/);
+  var icpLabel = icpScoreMatch ? icpScoreMatch[1] + '/10' : (icpNum ? icpNum + '/10' : '-');
+  var icpHtml = dos.icp
+    ? '<div style="display:flex;flex-direction:column;gap:6px">' +
+        '<span class="icp-badge ' + icpClass + '" title="' + escHtml(icpFull) + '" style="cursor:default">' + escHtml(icpLabel) + '</span>' +
+        '<span style="font-size:11px;color:var(--t);line-height:1.5">' + escHtml(icpFull.replace(/^\d+\s*\/?\s*10\s*[-—]?\s*/,'')) + '</span>' +
+      '</div>'
+    : '<span style="color:var(--m)">-</span>';
+  html += '<div class="dos-card"><div class="dos-card-label">ICP Score</div>' + icpHtml + '</div>';
+
+  // Personas card
+  html += makeDoCard('Key Personas', dos.personas, 'personas', false);
+
+  // Signals card
+  html += makeDoCard('Signalen', dos.signals, 'signals', false);
+
+  // Competitors card
+  html += makeDoCard('Concurrenten', dos.competitors, 'competitors', false);
+
+  // Deal card
+  html += makeDoCard('Deal Status', dos.deal, 'deal', false);
+
+  // Approach full width
+  html += makeDoCard('Aanpak', dos.approach, 'approach', true);
+
+  html += '</div>';
+  dosBody.innerHTML = html;
+}
+
+function makeDoCard(label, content, key, fullWidth) {
+  var cls = 'dos-card' + (fullWidth ? ' full' : '');
+  if (!content) {
+    return '<div class="' + cls + '"><div class="dos-card-label">' + label + '</div><span style="color:var(--m);font-size:11px">-</span></div>';
+  }
+  var items = content.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var html = '<div class="' + cls + '"><div class="dos-card-label">' + label + '</div>';
+  var max = 3;
+  var shown = Math.min(items.length, max);
+  for (var i = 0; i < shown; i++) {
+    var idx = key + '_' + i;
+    window._dosRows[idx] = {label: label, title: items[i], detail: content};
+    html += '<div class="dos-card-item" data-dosidx="' + idx + '">' + escHtml(items[i]) + '</div>';
+  }
+  if (items.length > max) {
+    html += '<button class="show-more-btn" onclick="showAllDos(\'' + key + '\',\'' + escHtml(content).replace(/'/g, '\\\'') + '\',\'' + label + '\')">' +
+      '+ ' + (items.length - max) + ' meer</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function showAllDos(key, content, label) {
+  openModal(label, label, content);
+}
+
+document.getElementById('dos-body').addEventListener('click', function(e) {
+  var el = e.target.closest('[data-dosidx]');
+  if (el) {
+    var idx = el.getAttribute('data-dosidx');
+    var row = window._dosRows[idx];
+    if (row) openModal(row.label, row.title, row.detail);
+  }
+});
+
+// Dossier buttons
+document.getElementById('dos-gen-btn').addEventListener('click', generateDossier);
+
+document.getElementById('dos-clear-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) return;
+  acc.dos = {account:'',icp:'',personas:'',signals:'',competitors:'',deal:'',approach:''};
+  save();
+  renderDossier();
+});
+
+document.getElementById('dos-copy-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) return;
+  var d = acc.dos;
+  var text = 'ACCOUNT: ' + d.account + '\nICP: ' + d.icp + '\nPERSONAS: ' + d.personas +
+    '\nSIGNALEN: ' + d.signals + '\nCONCURRENTEN: ' + d.competitors +
+    '\nDEAL: ' + d.deal + '\nAANPAK: ' + d.approach;
+  copyText(text, function() { showToast('Dossier gekopieerd!'); });
+});
+
+document.getElementById('dos-del-acc-btn').addEventListener('click', function() {
+  var bar = document.getElementById('dos-confirm-bar');
+  bar.style.display = 'flex';
+});
+
+document.getElementById('dos-confirm-no').addEventListener('click', function() {
+  document.getElementById('dos-confirm-bar').style.display = 'none';
+});
+
+document.getElementById('dos-confirm-yes').addEventListener('click', function() {
+  document.getElementById('dos-confirm-bar').style.display = 'none';
+  var id = state.activeId;
+  if (!id) return;
+  state.accounts = state.accounts.filter(function(a) { return a.id !== id; });
+  state.activeId = state.accounts.length ? state.accounts[0].id : null;
+  save();
+  renderAccList();
+  if (state.activeId) {
+    var a = getAcc();
+    document.getElementById('acc-name-lbl').textContent = a ? a.name : '-- Kies account --';
+    loadAccount();
+  } else {
+    document.getElementById('acc-name-lbl').textContent = '-- Kies account --';
+    document.getElementById('dos-body').innerHTML = '';
+  }
+});
+
+// =====================================================================
+// ACCOUNT MAP
+// =====================================================================
+document.getElementById('map-gen-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) { alert('Selecteer eerst een account.'); return; }
+  var region = getRegion();
+
+  var sysPrompt = 'Je bent een Mendix account mapping expert voor ' + region + '. ' +
+    'Geef uitsluitend een JSON array terug, geen andere tekst, geen uitleg, geen markdown. ' +
+    'Formaat: [{"name":"...","title":"...","role":"...","insight":"...","strategy":"..."}] ' +
+    'Rollen (gebruik exact): Beslisser, Champion, Influencer, Blocker, Technisch Evaluator. ' +
+    'Focus op ' + region + '. Begin direct met [ en eindig met ].';
+
+  var ctx = 'Account: ' + acc.name + '\nRegio: ' + region + '\n';
+  if (acc.dos.personas) ctx += 'Bekende personas: ' + acc.dos.personas + '\n';
+  if (acc.dos.account) ctx += 'Bedrijf: ' + acc.dos.account + '\n';
+
+  showTyping('mapping');
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: API_MODEL,
+      max_tokens: 2000,
+      system: sysPrompt,
+      // No web search — we need clean JSON output, not search-augmented text
+      messages: [{role:'user', content: ctx + '\nGenereer een stakeholder map met 4-6 typische personen voor dit type bedrijf in ' + region + '. Geef ALLEEN de JSON array.'}]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    hideTyping('mapping');
+    if (data.error) {
+      appendMsg('mapping', 'agent', '<span style="color:var(--err)">Fout: ' + escHtml(data.error.message) + '</span>');
+      return;
+    }
+
+    // Collect all text blocks
+    var text = '';
+    data.content && data.content.forEach(function(b) { if (b.type === 'text') text += b.text; });
+
+    // Strip markdown code fences (```json ... ``` or ``` ... ```)
+    text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+
+    var stakeholders = [];
+    try {
+      // Find outermost [ ... ] even if there's surrounding text
+      var start = text.indexOf('[');
+      var end = text.lastIndexOf(']');
+      if (start !== -1 && end !== -1 && end > start) {
+        stakeholders = JSON.parse(text.substring(start, end + 1));
+      }
+    } catch(e) {
+      // Log for debugging
+      console.error('JSON parse error:', e.message, '| Raw text:', text.substring(0, 200));
+      stakeholders = [];
+    }
+
+    if (!stakeholders.length) {
+      appendMsg('mapping', 'agent', '<p style="color:var(--err)">Kon geen stakeholders parsen. Probeer opnieuw.</p><p style="font-size:11px;color:var(--m)">Ruwe response: ' + escHtml(text.substring(0, 300)) + '</p>');
+      return;
+    }
+
+    acc.mapping = stakeholders;
+    save();
+
+    var cardsHtml = '<div class="map-grid">';
+    stakeholders.forEach(function(s) {
+      var rc = ROLE_COLORS[s.role] || {bg:'var(--b)',color:'var(--m)',border:'var(--b2)'};
+      cardsHtml += '<div class="map-card">';
+      cardsHtml += '<div class="map-card-name">' + escHtml(s.name) + '</div>';
+      cardsHtml += '<div class="map-card-title">' + escHtml(s.title) + '</div>';
+      cardsHtml += '<span class="role-badge" style="background:' + rc.bg + ';color:' + rc.color + ';border:1px solid ' + rc.border + '">' + escHtml(s.role) + '</span>';
+      cardsHtml += '<div class="map-card-insight">' + escHtml(s.insight || '') + '</div>';
+      cardsHtml += '<div class="map-card-strat">' + escHtml(s.strategy || '') + '</div>';
+      cardsHtml += '</div>';
+    });
+    cardsHtml += '</div>';
+
+    appendMsg('mapping', 'agent', cardsHtml);
+  })
+  .catch(function(err) {
+    hideTyping('mapping');
+    appendMsg('mapping', 'agent', '<span style="color:var(--err)">Fout: ' + escHtml(err.message) + '</span>');
+  });
+});
+
+document.getElementById('map-clear-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) return;
+  acc.mapping = [];
+  acc.histories.mapping = [];
+  var win = document.getElementById('chat-mapping');
+  if (win) win.innerHTML = '';
+  save();
+});
+
+// =====================================================================
+// SUGGESTIONS
+// =====================================================================
+// Store last response text per tab for on-demand suggestions
+var lastResponseText = {};
+
+function initSuggestions() {
+  AGENTS.forEach(function(tab) {
+    var row = document.getElementById('sugg-' + tab);
+    if (!row) return;
+    row.innerHTML = '';
+
+    // Static starter chips
+    var starters = STATIC_STARTERS[tab] || [];
+    starters.forEach(function(s) {
+      var chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = s;
+      chip.addEventListener('click', function() {
+        var inp = document.getElementById('inp-' + tab);
+        if (inp) { inp.value = s; inp.focus(); }
+        if (activeTab !== tab) switchTab(tab);
+      });
+      row.appendChild(chip);
+    });
+
+    // On-demand suggestions button
+    var suggBtn = document.createElement('button');
+    suggBtn.className = 'chip';
+    suggBtn.id = 'sugg-btn-' + tab;
+    suggBtn.style.cssText = 'color:var(--y);border-color:var(--y);opacity:.7';
+    suggBtn.textContent = '\uD83D\uDCA1 Suggesties';
+    suggBtn.addEventListener('click', function() {
+      var text = lastResponseText[tab];
+      if (!text) { suggBtn.textContent = 'Geen antwoord nog'; setTimeout(function(){ suggBtn.textContent = '\uD83D\uDCA1 Suggesties'; }, 1500); return; }
+      suggBtn.textContent = '...';
+      suggBtn.disabled = true;
+      generateSuggestions(tab, text, function() {
+        suggBtn.textContent = '\uD83D\uDCA1 Suggesties';
+        suggBtn.disabled = false;
+      });
+    });
+    row.appendChild(suggBtn);
+  });
+}
+
+function generateSuggestions(tab, responseText, doneCb) {
+  var row = document.getElementById('sugg-' + tab);
+  if (!row) { if (doneCb) doneCb(); return; }
+
+  var preview = stripHtml(responseText).substring(0, 200).replace(/\s+/g, ' ').trim();
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: API_MODEL,
+      max_tokens: 120,
+      messages: [{role:'user', content: '3 vervolgvragen (max 5 woorden elk) als JSON array ["...","...","..."]. Geen andere tekst. Context: ' + preview}]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var text = '';
+    data.content && data.content.forEach(function(b) { if (b.type === 'text') text += b.text; });
+    var questions = [];
+    try {
+      text = text.trim();
+      if (text.indexOf('[') !== -1) {
+        text = text.substring(text.indexOf('['), text.lastIndexOf(']') + 1);
+        questions = JSON.parse(text);
+      }
+    } catch(e) {}
+
+    // Remove existing dyn chips
+    row.querySelectorAll('.chip.dyn').forEach(function(c) { c.remove(); });
+
+    // Insert dyn chips before the suggestions button
+    var suggBtn = document.getElementById('sugg-btn-' + tab);
+    questions.slice(0,3).forEach(function(q) {
+      var chip = document.createElement('button');
+      chip.className = 'chip dyn';
+      chip.textContent = q;
+      chip.addEventListener('click', function() {
+        var inp = document.getElementById('inp-' + tab);
+        if (inp) { inp.value = q; inp.focus(); }
+      });
+      row.insertBefore(chip, suggBtn);
+    });
+    if (doneCb) doneCb();
+  })
+  .catch(function() { if (doneCb) doneCb(); });
+}
+</script>
+
+<script>
+// =====================================================================
+// CONTACTS
+// =====================================================================
+function renderContacts() {
+  var acc = getAcc();
+  var body = document.getElementById('contacts-body');
+  if (!acc || !acc.contacts || !acc.contacts.length) {
+    body.innerHTML = '<div style="color:var(--m);font-size:12px;padding:20px">Geen contacten. Zoek of voeg handmatig toe.</div>';
+    return;
+  }
+  body.innerHTML = '';
+  acc.contacts.forEach(function(c) {
+    body.appendChild(makeContactCard(c));
+  });
+}
+
+function makeLinkedInField(c) {
+  if (c.linkedin && c.linkedin.trim()) {
+    var url = c.linkedin.trim();
+    if (url.indexOf('http') !== 0) url = 'https://' + url;
+    var label = c.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//,'').replace(/\/$/,'');
+    if (label.length > 24) label = label.substring(0, 24) + '…';
+    return '<div class="contact-field-badge-wrap">' +
+      '<a class="contact-field-badge contact-field-badge-li" href="' + escHtml(url) + '" target="_blank" rel="noopener">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' +
+        '<span>' + escHtml(label) + '</span>' +
+      '</a>' +
+      '<button class="contact-field-edit" data-edit-field="linkedin" data-cid="' + c.id + '" title="Bewerken">&#x270E;</button>' +
+    '</div>';
+  }
+  return '<input type="text" value="" data-field="linkedin" data-cid="' + c.id + '" placeholder="linkedin.com/in/...">';
+}
+
+function makeEmailField(c) {
+  if (c.email && c.email.trim()) {
+    var email = c.email.trim();
+    var label = email.length > 26 ? email.substring(0, 26) + '…' : email;
+    return '<div class="contact-field-badge-wrap">' +
+      '<a class="contact-field-badge contact-field-badge-email" href="mailto:' + escHtml(email) + '">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>' +
+        '<span>' + escHtml(label) + '</span>' +
+      '</a>' +
+      '<button class="contact-field-edit" data-edit-field="email" data-cid="' + c.id + '" title="Bewerken">&#x270E;</button>' +
+    '</div>';
+  }
+  return '<input type="text" value="" data-field="email" data-cid="' + c.id + '" placeholder="email@bedrijf.nl">';
+}
+
+function isTemplate(c) {
+  // A contact is still a template if it came from mapping AND has no real email
+  // OR if the name hasn't been changed from the AI-generated value
+  return c.source === 'mapping' && (!c.email || !c.email.trim()) && !c._nameEdited;
+}
+
+function makeContactCard(c) {
+  var wrapper = document.createElement('div');
+  wrapper.className = 'contact-card';
+  wrapper.setAttribute('data-cid', c.id);
+
+  var initial = (c.name || '?').charAt(0).toUpperCase();
+  var rc = ROLE_COLORS[c.role] || {bg:'var(--b2)',color:'var(--m)',border:'var(--b2)'};
+  var template = isTemplate(c);
+
+  var hasSeq = c.sequences && c.sequences.length > 0;
+  var seqHtml = hasSeq
+    ? '<span class="seq-status seq-active">\u25CF Sequence actief</span>'
+    : '<span class="seq-status seq-none">Geen sequence</span>';
+
+  // Template warning badge
+  var templateBadge = template
+    ? '<div style="background:#1a1200;border:1px solid #3a2800;border-radius:5px;padding:3px 8px;font-size:10px;color:#f59e0b;margin-bottom:6px">&#x26A0; Sjabloon — vul naam &amp; email in om te activeren</div>'
+    : '';
+
+  // Action buttons — disabled when template
+  var btnDisabled = template ? ' disabled style="opacity:.35;cursor:not-allowed;pointer-events:none"' : '';
+
+  wrapper.innerHTML =
+    '<div class="contact-avatar" style="background:' + rc.bg + ';color:' + rc.color + ';' + (template ? 'opacity:.6' : '') + '">' + escHtml(initial) + '</div>' +
+    '<div class="contact-info">' +
+      templateBadge +
+      '<div class="contact-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+        '<input class="contact-name-inp" type="text" value="' + escHtml(c.name) + '" data-field="name" data-cid="' + c.id + '" placeholder="Naam">' +
+        seqHtml +
+      '</div>' +
+      '<input class="contact-title-inp" type="text" value="' + escHtml(c.title||'') + '" data-field="title" data-cid="' + c.id + '" placeholder="Functietitel" style="margin-bottom:6px">' +
+      '<div style="margin-bottom:4px"><span class="role-badge" style="background:' + rc.bg + ';color:' + rc.color + ';border:1px solid ' + rc.border + ';font-size:10px;padding:1px 6px;border-radius:4px">' + escHtml(c.role || '') + '</span></div>' +
+      '<div class="contact-fields">' +
+        '<div class="contact-field"><span class="contact-field-lbl">Email</span>' + makeEmailField(c) + '</div>' +
+        '<div class="contact-field"><span class="contact-field-lbl">Telefoon</span><input type="text" value="' + escHtml(c.phone||'') + '" data-field="phone" data-cid="' + c.id + '" placeholder="+31..."></div>' +
+        '<div class="contact-field"><span class="contact-field-lbl">LinkedIn</span>' + makeLinkedInField(c) + '</div>' +
+      '</div>' +
+      '<div class="contact-actions">' +
+        '<span style="font-size:10px;color:var(--m)">Taal:</span>' +
+        '<select class="contact-lang-sel" data-field="lang" data-cid="' + c.id + '">' +
+          '<option value=""' + (!c.lang ? ' selected' : '') + '>Suite standaard</option>' +
+          '<option value="NL"' + (c.lang==='NL' ? ' selected' : '') + '>NL</option>' +
+          '<option value="FR"' + (c.lang==='FR' ? ' selected' : '') + '>FR</option>' +
+          '<option value="DE"' + (c.lang==='DE' ? ' selected' : '') + '>DE</option>' +
+          '<option value="EN"' + (c.lang==='EN' ? ' selected' : '') + '>EN</option>' +
+        '</select>' +
+        '<button class="cact-btn" data-action="sequence" data-cid="' + c.id + '"' + btnDisabled + '>\u25BA Sequence</button>' +
+        '<button class="cact-btn" data-action="bdr" data-cid="' + c.id + '"' + btnDisabled + '>BDR</button>' +
+        '<button class="cact-btn" data-action="research" data-cid="' + c.id + '"' + btnDisabled + '>Research</button>' +
+        '<button class="cact-btn del" data-action="delete" data-cid="' + c.id + '">\u00D7</button>' +
+      '</div>' +
+    '</div>';
+
+  return wrapper;
+}
+
+document.getElementById('contacts-body').addEventListener('change', function(e) {
+  var inp = e.target.closest('[data-field][data-cid]');
+  if (!inp) return;
+  var cid = inp.getAttribute('data-cid');
+  var field = inp.getAttribute('data-field');
+  var acc = getAcc();
+  if (!acc) return;
+  for (var i = 0; i < acc.contacts.length; i++) {
+    if (acc.contacts[i].id === cid) {
+      acc.contacts[i][field] = inp.value;
+      if (field === 'name' && inp.value.trim()) acc.contacts[i]._nameEdited = true;
+      save();
+      if (field === 'name' || field === 'email') {
+        var capturedCid = cid;
+        var capturedContact = acc.contacts[i];
+        setTimeout(function() {
+          var card = document.querySelector('.contact-card[data-cid="' + capturedCid + '"]');
+          if (card && card.parentNode) {
+            var newCard = makeContactCard(capturedContact);
+            card.parentNode.replaceChild(newCard, card);
+          }
+        }, 0);
+      }
+      break;
+    }
+  }
+});
+
+document.getElementById('contacts-body').addEventListener('click', function(e) {
+  // Edit badge → switch to input
+  if (e.target.hasAttribute('data-edit-field')) {
+    var field = e.target.getAttribute('data-edit-field');
+    var cid = e.target.getAttribute('data-cid');
+    var acc = getAcc();
+    if (!acc) return;
+    var contact = null;
+    for (var ci = 0; ci < acc.contacts.length; ci++) {
+      if (acc.contacts[ci].id === cid) { contact = acc.contacts[ci]; break; }
+    }
+    if (!contact) return;
+    var wrap = e.target.closest('.contact-field-badge-wrap');
+    if (!wrap) return;
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = contact[field] || '';
+    inp.setAttribute('data-field', field);
+    inp.setAttribute('data-cid', cid);
+    inp.style.cssText = 'flex:1;font-size:11px';
+    inp.className = '';
+    wrap.parentNode.replaceChild(inp, wrap);
+    inp.focus();
+    inp.select();
+    // On blur: save and re-render card
+    inp.addEventListener('blur', function() {
+      contact[field] = inp.value.trim();
+      if (field === 'email' && inp.value.trim()) contact._nameEdited = true;
+      save();
+      setTimeout(function() {
+        var card = document.querySelector('.contact-card[data-cid="' + cid + '"]');
+        if (card && card.parentNode) {
+          card.parentNode.replaceChild(makeContactCard(contact), card);
+        }
+      }, 0);
+    });
+    inp.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter') inp.blur();
+      if (ev.key === 'Escape') { contact[field] = inp.value; inp.blur(); }
+    });
+    return;
+  }
+
+  // Confirm delete
+  if (e.target.hasAttribute('data-confirm-del')) {
+    deleteContact(e.target.getAttribute('data-confirm-del'));
+    return;
+  }
+  // Cancel delete
+  if (e.target.hasAttribute('data-cancel-del')) {
+    var bar = e.target.closest('.contact-del-confirm');
+    if (bar) bar.remove();
+    return;
+  }
+
+  var btn = e.target.closest('[data-action][data-cid]');
+  if (!btn) return;
+  var action = btn.getAttribute('data-action');
+  var cid = btn.getAttribute('data-cid');
+  if (action === 'sequence') contactToSequence(cid);
+  else if (action === 'bdr') contactToBDR(cid);
+  else if (action === 'research') contactToResearch(cid);
+  else if (action === 'delete') {
+    // Show inline confirm bar on the card
+    var card = btn.closest('.contact-card');
+    if (!card) return;
+    var existing = card.querySelector('.contact-del-confirm');
+    if (existing) { existing.remove(); return; }
+    var bar = document.createElement('div');
+    bar.className = 'contact-del-confirm';
+    bar.style.cssText = 'display:flex;align-items:center;gap:8px;background:#1a0808;border:1px solid var(--err);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--err);margin-top:6px';
+    bar.innerHTML = '<span>Contact verwijderen?</span>' +
+      '<button class="pair-confirm-yes" data-confirm-del="' + cid + '">Ja</button>' +
+      '<button class="pair-confirm-no" data-cancel-del="true">Nee</button>';
+    card.querySelector('.contact-info').appendChild(bar);
+  }
+});
+
+function deleteContact(cid) {
+  var acc = getAcc();
+  if (!acc) return;
+
+  // 1. Remove contact
+  acc.contacts = acc.contacts.filter(function(c) { return c.id !== cid; });
+
+  // 2. Remove touch tasks linked to this contact
+  acc.tasks = (acc.tasks || []).filter(function(t) {
+    return t.contactId !== cid;
+  });
+
+  // 3. Remove sequence chat history linked to this contact
+  acc.histories.sequence = (acc.histories.sequence || []).filter(function(m) {
+    return m.contactId !== cid;
+  });
+
+  save();
+  renderContacts();
+  populateSeqContactSel();
+  renderSeqOverview();
+  renderTasks();
+}
+
+function contactToSequence(cid) {
+  var acc = getAcc();
+  if (!acc) return;
+  var sel = document.getElementById('seq-contact-sel');
+  if (sel) sel.value = cid;
+  switchTab('sequence');
+  var inp = document.getElementById('inp-sequence');
+  if (!inp) return;
+  var c = null;
+  for (var i = 0; i < acc.contacts.length; i++) {
+    if (acc.contacts[i].id === cid) { c = acc.contacts[i]; break; }
+  }
+  if (c) inp.value = 'Bouw een 5-touch sequence voor ' + c.name + ' (' + c.title + ')';
+}
+
+function contactToBDR(cid) {
+  var acc = getAcc();
+  if (!acc) return;
+  switchTab('bdr');
+  var c = null;
+  for (var i = 0; i < acc.contacts.length; i++) {
+    if (acc.contacts[i].id === cid) { c = acc.contacts[i]; break; }
+  }
+  if (c) {
+    var inp = document.getElementById('inp-bdr');
+    if (inp) inp.value = 'Hoe benader ik ' + c.name + ' (' + c.title + ', ' + (c.role||'') + ')?';
+  }
+}
+
+function contactToResearch(cid) {
+  var acc = getAcc();
+  if (!acc) return;
+  switchTab('research');
+  var c = null;
+  for (var i = 0; i < acc.contacts.length; i++) {
+    if (acc.contacts[i].id === cid) { c = acc.contacts[i]; break; }
+  }
+  if (c) {
+    var inp = document.getElementById('inp-research');
+    if (inp) inp.value = 'Onderzoek ' + c.name + ', ' + c.title;
+  }
+}
+
+function importFromMapping() {
+  var acc = getAcc();
+  if (!acc || !acc.mapping || !acc.mapping.length) {
+    alert('Geen Account Map beschikbaar. Genereer eerst de Account Map.');
+    return;
+  }
+  var added = 0;
+  acc.mapping.forEach(function(s) {
+    var exists = acc.contacts.some(function(c) { return c.name === s.name; });
+    if (!exists) {
+      acc.contacts.push({
+        id: 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+        name: s.name,
+        title: s.title,
+        role: s.role,
+        email: '',
+        phone: '',
+        linkedin: '',
+        insight: s.insight || '',
+        strategy: s.strategy || '',
+        source: 'mapping',
+        sequences: []
+      });
+      added++;
+    }
+  });
+  save();
+  renderContacts();
+  populateSeqContactSel();
+  if (added) showToast(added + ' rol-sjablonen geïmporteerd — vul naam & email in via LinkedIn.');
+  else showToast('Alle rollen zijn al aanwezig als contact.');
+}
+
+function openContactForm() {
+  var acc = getAcc();
+  if (!acc) { showToast('Selecteer eerst een account.'); return; }
+  // Reset form
+  ['cform-name','cform-jobtitle','cform-email','cform-phone','cform-linkedin'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('cform-role').value = 'Influencer';
+  document.getElementById('cform-title').textContent = 'Contact toevoegen';
+  document.getElementById('cform-overlay').classList.add('open');
+  setTimeout(function() { document.getElementById('cform-name').focus(); }, 50);
+}
+
+function saveContactForm() {
+  var name = document.getElementById('cform-name').value.trim();
+  var title = document.getElementById('cform-jobtitle').value.trim();
+  if (!name) { document.getElementById('cform-name').focus(); return; }
+  var acc = getAcc();
+  if (!acc) return;
+  acc.contacts.push({
+    id: 'c_' + Date.now(),
+    name: name,
+    title: title,
+    role: document.getElementById('cform-role').value,
+    email: document.getElementById('cform-email').value.trim(),
+    phone: document.getElementById('cform-phone').value.trim(),
+    linkedin: document.getElementById('cform-linkedin').value.trim(),
+    insight: '',
+    strategy: '',
+    source: 'manual',
+    sequences: []
+  });
+  save();
+  document.getElementById('cform-overlay').classList.remove('open');
+  renderContacts();
+  populateSeqContactSel();
+}
+
+document.getElementById('cform-save').addEventListener('click', saveContactForm);
+document.getElementById('cform-cancel').addEventListener('click', function() {
+  document.getElementById('cform-overlay').classList.remove('open');
+});
+document.getElementById('cform-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+// Enter submits form
+['cform-name','cform-jobtitle','cform-email','cform-phone','cform-linkedin'].forEach(function(id) {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') saveContactForm();
+  });
+});
+
+function addManualContact() { openContactForm(); }
+
+document.getElementById('add-contact-btn').addEventListener('click', addManualContact);
+document.getElementById('import-map-btn').addEventListener('click', importFromMapping);
+
+// =====================================================================
+// SEQUENCE
+// =====================================================================
+function renderSeqOverview() {
+  var el = document.getElementById('seq-overview');
+  if (!el) return;
+  var acc = getAcc();
+  if (!acc) { el.innerHTML = ''; return; }
+
+  // Contacts with sequences
+  var withSeq = (acc.contacts || []).filter(function(c) { return c.sequences && c.sequences.length > 0; });
+  // Unlinked sequence history pairs (user messages without a contact)
+  var seqHist = acc.histories.sequence || [];
+  var unlinkedPairs = [];
+  for (var i = 0; i < seqHist.length; i += 2) {
+    var userMsg = seqHist[i];
+    var agentMsg = seqHist[i+1];
+    if (userMsg && userMsg.role === 'user' && !userMsg.contactId) {
+      unlinkedPairs.push({user: userMsg, agent: agentMsg, idx: i});
+    }
+  }
+
+  if (!withSeq.length && !unlinkedPairs.length) {
+    el.innerHTML = '<div style="color:var(--m);font-size:11px;padding:4px 0">Nog geen sequences. Kies een contact hieronder om te starten.</div>';
+    return;
+  }
+
+  var html = '<div style="font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Sequences per contact</div>';
+
+  // Group by contact
+  var shown = {};
+  withSeq.forEach(function(c) {
+    shown[c.id] = true;
+    var rc = ROLE_COLORS[c.role] || {bg:'var(--b2)',color:'var(--m)',border:'var(--b2)'};
+    var initial = (c.name || '?').charAt(0).toUpperCase();
+    var langBadge = c.lang ? '<span class="contact-group-lang">' + c.lang + '</span>' : '';
+    var seqCount = c.sequences.length;
+    var latest = c.sequences[c.sequences.length - 1];
+    var latestDate = latest ? new Date(latest.date).toLocaleDateString('nl-NL') : '';
+
+    html += '<div class="contact-group" id="seqgrp_' + c.id + '">' +
+      '<div class="contact-group-header">' +
+        '<div class="contact-group-avatar" style="background:' + rc.bg + ';color:' + rc.color + '">' + escHtml(initial) + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="display:flex;align-items:center;gap:6px">' +
+            '<span class="contact-group-name">' + escHtml(c.name) + '</span>' +
+            langBadge +
+          '</div>' +
+          '<div class="contact-group-meta">' + escHtml(c.title || '') + ' &nbsp;·&nbsp; ' + seqCount + ' sequence' + (seqCount !== 1 ? 's' : '') + (latestDate ? ' &nbsp;·&nbsp; Laatste: ' + latestDate : '') + '</div>' +
+        '</div>' +
+        '<button class="dos-btn" style="font-size:10px;padding:3px 8px" onclick="jumpToSeqContact(\'' + c.id + '\')">+ Nieuw</button>' +
+        '<button class="dos-btn danger" style="font-size:10px;padding:3px 8px" onclick="confirmDeleteSequence(\'' + c.id + '\',\'' + escHtml(c.name).replace(/'/g,"\\'") + '\')">&#x1F5D1;</button>' +
+      '</div>' +
+      '<div id="seqdelconfirm_' + c.id + '" style="display:none;background:#1a0808;border:1px solid var(--err);border-radius:0 0 8px 8px;padding:8px 14px;font-size:11px;color:var(--err);display:none;align-items:center;gap:10px">' +
+        '<span>Verwijder sequence + taken voor ' + escHtml(c.name) + '?</span>' +
+        '<button class="pair-confirm-yes" onclick="deleteSequence(\'' + c.id + '\')">Ja, verwijder</button>' +
+        '<button class="pair-confirm-no" onclick="cancelDeleteSequence(\'' + c.id + '\')">Annuleer</button>' +
+      '</div>' +
+    '</div>';
+  });
+
+  el.innerHTML = html;
+
+  // Add unlinked sequences section if any
+  if (unlinkedPairs.length) {
+    var contactOpts = '<option value="">Koppel aan contact...</option>';
+    (acc.contacts || []).forEach(function(c) {
+      if (c._nameEdited || c.source !== 'mapping') {
+        contactOpts += '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
+      }
+    });
+
+    var unlinkedHtml = '<div style="margin-top:10px;border-top:1px solid var(--b);padding-top:10px">' +
+      '<div style="font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Niet gekoppelde sequences (' + unlinkedPairs.length + ')</div>';
+
+    unlinkedPairs.forEach(function(pair) {
+      var preview = stripHtml(pair.user.html).substring(0, 60) + '…';
+      unlinkedHtml += '<div style="background:var(--b);border:1px solid var(--b2);border-radius:7px;padding:8px 12px;margin-bottom:6px;font-size:11px">' +
+        '<div style="color:var(--t);margin-bottom:6px">' + escHtml(preview) + '</div>' +
+        '<div class="task-link-wrap">' +
+          '<select class="task-link-sel" id="slink_' + pair.idx + '">' + contactOpts + '</select>' +
+          '<button class="task-link-btn" data-seq-link="' + pair.idx + '">Koppel</button>' +
+        '</div>' +
+      '</div>';
+    });
+
+    unlinkedHtml += '</div>';
+    el.innerHTML += unlinkedHtml;
+
+    // Bind link buttons
+    el.querySelectorAll('[data-seq-link]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(btn.getAttribute('data-seq-link'));
+        var sel = document.getElementById('slink_' + idx);
+        if (!sel || !sel.value) { showToast('Kies eerst een contact.'); return; }
+        var contact = null;
+        for (var ci = 0; ci < acc.contacts.length; ci++) {
+          if (acc.contacts[ci].id === sel.value) { contact = acc.contacts[ci]; break; }
+        }
+        if (!contact) return;
+        // Tag history entries with contactId
+        if (acc.histories.sequence[idx]) acc.histories.sequence[idx].contactId = sel.value;
+        if (acc.histories.sequence[idx+1]) acc.histories.sequence[idx+1].contactId = sel.value;
+        // Add sequence record to contact
+        if (!contact.sequences) contact.sequences = [];
+        contact.sequences.push({date: new Date().toISOString(), touches: 0, linked: true});
+        save();
+        renderSeqOverview();
+        showToast('Sequence gekoppeld aan ' + contact.name + '.');
+      });
+    });
+  }
+}
+
+function confirmDeleteSequence(cid, name) {
+  var bar = document.getElementById('seqdelconfirm_' + cid);
+  if (bar) bar.style.display = 'flex';
+}
+
+function cancelDeleteSequence(cid) {
+  var bar = document.getElementById('seqdelconfirm_' + cid);
+  if (bar) bar.style.display = 'none';
+}
+
+function deleteSequence(cid) {
+  var acc = getAcc();
+  if (!acc) return;
+
+  // 1. Remove sequence records from contact
+  for (var i = 0; i < acc.contacts.length; i++) {
+    if (acc.contacts[i].id === cid) {
+      acc.contacts[i].sequences = [];
+      break;
+    }
+  }
+
+  // 2. Remove touch tasks linked to this contact
+  acc.tasks = acc.tasks.filter(function(t) {
+    return !(t.contactId === cid && t.touchType);
+  });
+
+  // 3. Remove sequence chat history entries linked to this contact
+  acc.histories.sequence = (acc.histories.sequence || []).filter(function(m) {
+    return m.contactId !== cid;
+  });
+
+  save();
+  renderSeqOverview();
+  showToast('Sequence en gekoppelde taken verwijderd.');
+}
+
+function jumpToSeqContact(cid) {
+  var sel = document.getElementById('seq-contact-sel');
+  if (sel) sel.value = cid;
+  var inp = document.getElementById('inp-sequence');
+  if (inp) { inp.focus(); }
+}
+
+function populateSeqContactSel() {
+  var acc = getAcc();
+  var sel = document.getElementById('seq-contact-sel');
+  var prev = sel.value;
+  sel.innerHTML = '<option value="">Geen contact geselecteerd</option>';
+  if (!acc || !acc.contacts) return;
+  acc.contacts.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.id;
+    var langLabel = c.lang ? ' [' + c.lang + ']' : '';
+    opt.textContent = c.name + ' \u2013 ' + (c.title || '') + langLabel;
+    sel.appendChild(opt);
+  });
+  if (prev) sel.value = prev;
+}
+
+function parseSequenceTouches(text, html) {
+  lastTouches = [];
+  var parts = text.split('===TOUCH_START===');
+  if (parts.length < 2) return html;
+
+  var touchCards = '<div style="margin-top:12px">';
+  parts.slice(1).forEach(function(part) {
+    var end = part.indexOf('===TOUCH_END===');
+    if (end === -1) return;
+    var block = part.substring(0, end).trim();
+
+    function getField(name) {
+      var lines = block.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf(name + ':') === 0) {
+          return lines[i].substring((name + ':').length).trim();
+        }
+      }
+      return '';
+    }
+
+    function getBody() {
+      var s = block.indexOf('BODY:\n');
+      var e = block.indexOf('\nCTA:');
+      if (s === -1) return '';
+      s += 6;
+      if (e === -1) return block.substring(s).trim();
+      return block.substring(s, e).trim();
+    }
+
+    var num = getField('TOUCH');
+    var channel = getField('KANAAL');
+    var day = getField('DAG');
+    var subject = getField('ONDERWERP');
+    var body = getBody();
+    var cta = getField('CTA');
+
+    var touch = {num: num, channel: channel, day: day, subject: subject, body: body, cta: cta};
+    lastTouches.push(touch);
+
+    var badgeCls = channel === 'Email' ? 'touch-email' : (channel === 'LinkedIn' ? 'touch-li' : 'touch-call');
+    var tid = 'touch_' + Date.now() + '_' + num;
+
+    touchCards += '<div class="touch-card" id="' + tid + '">';
+    touchCards += '<div class="touch-header">';
+    touchCards += '<span class="touch-badge ' + badgeCls + '">' + escHtml(channel) + '</span>';
+    touchCards += '<span class="touch-day">Dag ' + escHtml(day) + '</span>';
+    touchCards += '</div>';
+    if (subject) touchCards += '<div class="touch-subject">Onderwerp: ' + escHtml(subject) + '</div>';
+    touchCards += '<div class="touch-body">' + escHtml(body) + '</div>';
+    if (cta) touchCards += '<div class="touch-cta">CTA: ' + escHtml(cta) + '</div>';
+    touchCards += '<div class="touch-actions">';
+    if (channel === 'Email') {
+      touchCards += '<button class="touch-btn" data-touch-mailto="' + num + '">&#x2709; Verstuur via email</button>';
+    } else {
+      touchCards += '<button class="touch-btn" data-touch-copy="' + num + '">&#x29C9; Kopieer tekst</button>';
+    }
+    touchCards += '<button class="touch-btn" data-touch-task="' + num + '">+ Taak aanmaken</button>';
+    touchCards += '</div>';
+    touchCards += '</div>';
+  });
+  touchCards += '</div>';
+
+  // Show "alle touches als taken" button
+  if (lastTouches.length) {
+    document.getElementById('seq-all-tasks-btn').style.display = 'inline-flex';
+    // Save sequence to contact
+    var acc = getAcc();
+    var sel = document.getElementById('seq-contact-sel');
+    if (acc && sel && sel.value) {
+      var cid = sel.value;
+      for (var i = 0; i < acc.contacts.length; i++) {
+        if (acc.contacts[i].id === cid) {
+          if (!acc.contacts[i].sequences) acc.contacts[i].sequences = [];
+          acc.contacts[i].sequences.push({date: new Date().toISOString(), touches: lastTouches.length});
+          save();
+          renderSeqOverview();
+          break;
+        }
+      }
+    }
+  }
+
+  return html + touchCards;
+}
+
+// Touch card event delegation
+document.getElementById('chat-sequence').addEventListener('click', function(e) {
+  var btn = e.target;
+  if (!btn.hasAttribute('data-touch-mailto') && !btn.hasAttribute('data-touch-copy') && !btn.hasAttribute('data-touch-task')) return;
+
+  var num = btn.getAttribute('data-touch-mailto') || btn.getAttribute('data-touch-copy') || btn.getAttribute('data-touch-task');
+  var numInt = parseInt(num);
+  var touch = null;
+  for (var i = 0; i < lastTouches.length; i++) {
+    if (parseInt(lastTouches[i].num) === numInt) { touch = lastTouches[i]; break; }
+  }
+  if (!touch) return;
+
+  if (btn.hasAttribute('data-touch-mailto')) {
+    var acc = getAcc();
+    var contacts = acc ? acc.contacts : [];
+    if (contacts.length === 0) {
+      openMailtoRaw('', touch.subject, touch.body);
+    } else {
+      showContactPicker(contacts, function(cid) {
+        var con = null;
+        for (var j = 0; j < contacts.length; j++) {
+          if (contacts[j].id === cid) { con = contacts[j]; break; }
+        }
+        openMailtoRaw(con ? (con.email || '') : '', touch.subject, touch.body);
+      });
+    }
+  } else if (btn.hasAttribute('data-touch-copy')) {
+    copyText(touch.body, function() {
+      btn.textContent = 'Gekopieerd!';
+      setTimeout(function() { btn.textContent = '\u29C9 Kopieer tekst'; }, 2000);
+    });
+  } else if (btn.hasAttribute('data-touch-task')) {
+    createTouchTask(touch);
+  }
+});
+
+function openMailtoRaw(to, subject, body) {
+  var b = (body || '').substring(0, 1500);
+  var href = 'mailto:' + (to || '') +
+    '?subject=' + encodeURIComponent(subject || '') +
+    '&body=' + encodeURIComponent(b);
+
+  // Most compatible method: invisible anchor click
+  var a = document.createElement('a');
+  a.href = href;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { document.body.removeChild(a); }, 100);
+}
+
+function showContactPicker(contacts, cb) {
+  currentPickerCb = cb;
+  var list = document.getElementById('picker-list');
+  list.innerHTML = '';
+  contacts.forEach(function(c) {
+    var div = document.createElement('div');
+    div.className = 'picker-item';
+    div.setAttribute('data-cid', c.id);
+    div.innerHTML = '<strong>' + escHtml(c.name) + '</strong>&nbsp;<span style="color:var(--m)">' + escHtml(c.email || 'geen email') + '</span>';
+    div.addEventListener('click', function() {
+      document.getElementById('picker-overlay').classList.remove('open');
+      if (currentPickerCb) currentPickerCb(c.id);
+    });
+    list.appendChild(div);
+  });
+  document.getElementById('picker-overlay').classList.add('open');
+}
+
+document.getElementById('picker-cancel').addEventListener('click', function() {
+  document.getElementById('picker-overlay').classList.remove('open');
+});
+
+function createTouchTask(touch) {
+  var acc = getAcc();
+  if (!acc) return;
+  var sel = document.getElementById('seq-contact-sel');
+  var contactName = '';
+  var contactId = '';
+  if (sel && sel.value) {
+    contactId = sel.value;
+    var opt = sel.options[sel.selectedIndex];
+    if (opt) contactName = opt.textContent.split(' \u2013 ')[0];
+  }
+  var dayNum = parseInt(touch.day) || 1;
+  var taskDate = new Date();
+  taskDate.setDate(taskDate.getDate() + dayNum - 1);
+  var dateStr = taskDate.toISOString().substring(0, 10);
+
+  var task = {
+    id: 'task_' + Date.now(),
+    text: 'Touch ' + touch.num + ': ' + touch.channel + (contactName ? ' voor ' + contactName : ''),
+    date: dateStr,
+    prio: parseInt(touch.num) === 1 ? 'high' : 'mid',
+    done: false,
+    created: new Date().toISOString(),
+    touchType: touch.channel,
+    touchContent: touch.body,
+    touchSubject: touch.subject || '',
+    contactId: contactId,
+    contactName: contactName
+  };
+  acc.tasks.push(task);
+  save();
+  // Flash tasks tab
+  var taskTab = document.querySelector('[data-tab="tasks"]');
+  if (taskTab) {
+    taskTab.classList.add('flash-anim');
+    setTimeout(function() { taskTab.classList.remove('flash-anim'); }, 1200);
+  }
+}
+
+// All touches as tasks
+document.getElementById('seq-all-tasks-btn').addEventListener('click', function() {
+  if (!lastTouches.length) return;
+  lastTouches.forEach(function(t) { createTouchTask(t); });
+  this.textContent = '\u2714 Taken aangemaakt!';
+  var self = this;
+  setTimeout(function() { self.textContent = '\u2714 Alle touches als taken'; }, 2000);
+  renderTasks();
+});
+</script>
+
+<script>
+// =====================================================================
+// TASKS
+// =====================================================================
+function renderTasks() {
+  var acc = getAcc();
+  var body = document.getElementById('tasks-body');
+  if (!acc) { body.innerHTML = ''; return; }
+
+  var today = new Date().toISOString().substring(0, 10);
+  var tasks = (acc.tasks || []).slice().sort(function(a,b) {
+    return (a.date || '').localeCompare(b.date || '');
+  });
+
+  var filtered = tasks.filter(function(t) {
+    if (taskFilter === 'all') return true;
+    if (taskFilter === 'open') return !t.done && t.date >= today;
+    if (taskFilter === 'done') return t.done;
+    if (taskFilter === 'expired') return !t.done && t.date < today;
+    return true;
+  });
+
+  if (!filtered.length) {
+    body.innerHTML = '<div style="color:var(--m);font-size:12px;padding:20px">Geen taken.</div>';
+    return;
+  }
+
+  // Group tasks by contactId
+  var groups = {};       // contactId -> {name, tasks[]}
+  var generalTasks = []; // tasks without contact
+
+  filtered.forEach(function(t) {
+    if (t.contactId && t.contactName) {
+      if (!groups[t.contactId]) groups[t.contactId] = {name: t.contactName, id: t.contactId, tasks: []};
+      groups[t.contactId].tasks.push(t);
+    } else {
+      generalTasks.push(t);
+    }
+  });
+
+  body.innerHTML = '';
+
+  function makeTaskEl(t) {
+    var div = document.createElement('div');
+    div.className = 'task-item';
+    var isExpired = !t.done && t.date < today;
+    var checkCls = t.done ? 'task-check done-check' : 'task-check';
+    var checkInner = t.done ? '\u2713' : '';
+    var textCls = t.done ? 'task-text done-text' : 'task-text';
+    var prioCls = t.prio === 'high' ? 'prio-high' : (t.prio === 'mid' ? 'prio-mid' : 'prio-low');
+    var actionsHtml = '';
+    if (t.touchType) {
+      if (t.touchType === 'Email') actionsHtml += '<button class="task-act-btn" data-task-mailto="' + t.id + '">\u2709 Verstuur email</button>';
+      else if (t.touchType === 'LinkedIn' || t.touchType === 'Bel') actionsHtml += '<button class="task-act-btn" data-task-copy="' + t.id + '">\u29C9 Kopieer</button>';
+      actionsHtml += '<button class="task-act-btn" data-task-toggle-content="' + t.id + '">Toon tekst</button>';
+    }
+    actionsHtml += '<button class="task-act-btn" style="color:var(--err)" data-task-del="' + t.id + '">\u00D7</button>';
+    // Link to contact option for unlinked tasks
+    var linkHtml = '';
+    if (!t.contactId) {
+      var acc2 = getAcc();
+      var contactOpts = '<option value="">Koppel aan contact...</option>';
+      if (acc2 && acc2.contacts) {
+        acc2.contacts.forEach(function(c) {
+          if (c._nameEdited || c.source !== 'mapping') {
+            contactOpts += '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
+          }
+        });
+      }
+      linkHtml = '<div class="task-link-wrap">' +
+        '<select class="task-link-sel" id="tlink_' + t.id + '">' + contactOpts + '</select>' +
+        '<button class="task-link-btn" data-task-link="' + t.id + '">Koppel</button>' +
+      '</div>';
+    }
+
+    // Outreach status for touch tasks
+    var statusHtml = '';
+    if (t.touchType) {
+      var statuses = [
+        {key:'none',    label:'Nog te versturen', cls:'ts-none'},
+        {key:'sent',    label:'✉ Verstuurd',       cls:'ts-sent'},
+        {key:'replied', label:'✓ Reactie',          cls:'ts-replied'},
+        {key:'noreply', label:'✗ Geen reactie',     cls:'ts-noreply'}
+      ];
+      var current = t.outreachStatus || 'none';
+      var dateStr = t.outreachDate ? ' · ' + t.outreachDate : '';
+      statusHtml = '<div class="touch-status-wrap">';
+      statuses.forEach(function(s) {
+        var active = current === s.key;
+        statusHtml += '<button class="touch-status-btn ' + s.cls + '" ' +
+          (active ? 'style="opacity:1;font-weight:700" ' : 'style="opacity:' + (current === 'none' ? '0.5' : '0.3') + '" ') +
+          'data-task-status="' + s.key + '" data-tid="' + t.id + '">' + s.label + '</button>';
+      });
+      if (current !== 'none') statusHtml += '<span class="touch-status-date">' + escHtml(dateStr) + '</span>';
+      statusHtml += '</div>';
+    }
+
+    div.innerHTML =
+      '<div class="' + checkCls + '" data-task-check="' + t.id + '">' + checkInner + '</div>' +
+      '<div class="task-body">' +
+        '<div class="' + textCls + '">' + escHtml(t.text) + '</div>' +
+        '<div class="task-meta">' +
+          '<span class="task-prio ' + prioCls + '">' + (t.prio || 'mid') + '</span>' +
+          (t.date ? '<span>' + t.date + (isExpired ? ' \u26A0\uFE0F' : '') + '</span>' : '') +
+        '</div>' +
+        '<div class="task-actions">' + actionsHtml + '</div>' +
+        statusHtml +
+        linkHtml +
+        (t.touchContent ? '<div class="task-touch-content" id="tc_' + t.id + '">' + escHtml(t.touchContent) + '</div>' : '') +
+      '</div>';
+    return div;
+  }
+
+  function makeGroupHeader(name, cid, tasks) {
+    var acc2 = getAcc();
+    var contact = null;
+    if (acc2 && cid) { for (var i=0;i<acc2.contacts.length;i++) { if (acc2.contacts[i].id===cid) { contact=acc2.contacts[i]; break; } } }
+    var rc = contact ? (ROLE_COLORS[contact.role] || {bg:'var(--b2)',color:'var(--m)'}) : {bg:'var(--b2)',color:'var(--m)'};
+    var initial = (name||'?').charAt(0).toUpperCase();
+    var total = tasks.length;
+    var today2 = new Date().toISOString().substring(0,10);
+    var open = tasks.filter(function(t){ return !t.done && (!t.date || t.date >= today2); }).length;
+    var gid = 'tg_' + (cid || 'general');
+
+    var hdr = document.createElement('div');
+    hdr.className = 'contact-group-header';
+    hdr.setAttribute('data-group-toggle', gid);
+    hdr.innerHTML =
+      '<div class="contact-group-avatar" style="background:' + rc.bg + ';color:' + rc.color + '">' + escHtml(initial) + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+          '<span class="contact-group-name">' + escHtml(name) + '</span>' +
+        '</div>' +
+        (contact ? '<div class="contact-group-meta">' + escHtml(contact.title||'') + '</div>' : '') +
+      '</div>' +
+      '<span class="cg-count-badge">' + total + ' ' + (total!==1?'taken':'taak') + '</span>' +
+      (open > 0 ? '<span class="cg-open-badge">' + open + ' open</span>' : '') +
+      '<span class="contact-group-chevron">&#x25BC;</span>';
+
+    hdr.addEventListener('click', function() {
+      var tasksEl = document.getElementById(gid);
+      hdr.classList.toggle('open');
+      if (tasksEl) tasksEl.classList.toggle('open');
+    });
+    return hdr;
+  }
+
+  // Render contact groups
+  Object.keys(groups).forEach(function(cid) {
+    var g = groups[cid];
+    var wrap = document.createElement('div');
+    wrap.className = 'contact-group';
+    var gid = 'tg_' + cid;
+    wrap.appendChild(makeGroupHeader(g.name, cid, g.tasks));
+    var tasksWrap = document.createElement('div');
+    tasksWrap.className = 'contact-group-tasks open'; // open by default
+    tasksWrap.id = gid;
+    // Also mark header as open
+    wrap.querySelector('.contact-group-header').classList.add('open');
+    g.tasks.forEach(function(t) { tasksWrap.appendChild(makeTaskEl(t)); });
+    wrap.appendChild(tasksWrap);
+    body.appendChild(wrap);
+  });
+
+  // Render general tasks
+  if (generalTasks.length) {
+    var genWrap = document.createElement('div');
+    genWrap.className = 'contact-group';
+    var genGid = 'tg_general';
+    genWrap.appendChild(makeGroupHeader('Algemeen', null, generalTasks));
+    var genTasksWrap = document.createElement('div');
+    genTasksWrap.className = 'contact-group-tasks open';
+    genTasksWrap.id = genGid;
+    genWrap.querySelector('.contact-group-header').classList.add('open');
+    generalTasks.forEach(function(t) { genTasksWrap.appendChild(makeTaskEl(t)); });
+    genWrap.appendChild(genTasksWrap);
+    body.appendChild(genWrap);
+  }
+}
+
+document.getElementById('tasks-body').addEventListener('click', function(e) {
+  var el = e.target;
+  var acc = getAcc();
+  if (!acc) return;
+
+  // Outreach status change
+  if (el.hasAttribute('data-task-status')) {
+    var status = el.getAttribute('data-task-status');
+    var tid = el.getAttribute('data-tid');
+    var acc2 = getAcc();
+    if (!acc2) return;
+    for (var si = 0; si < acc2.tasks.length; si++) {
+      if (acc2.tasks[si].id === tid) {
+        acc2.tasks[si].outreachStatus = status;
+        acc2.tasks[si].outreachDate = status !== 'none' ? new Date().toLocaleDateString('nl-NL') : '';
+        // Auto-check task as done when replied
+        if (status === 'replied') acc2.tasks[si].done = true;
+        save();
+        renderTasks();
+        return;
+      }
+    }
+    return;
+  }
+
+  if (el.hasAttribute('data-task-check')) {
+    var id = el.getAttribute('data-task-check');
+    toggleTask(id);
+  } else if (el.hasAttribute('data-task-link')) {
+    var tid = el.getAttribute('data-task-link');
+    var sel = document.getElementById('tlink_' + tid);
+    if (!sel || !sel.value) { showToast('Kies eerst een contact.'); return; }
+    var acc2 = getAcc();
+    if (!acc2) return;
+    var cid = sel.value;
+    var contact = null;
+    for (var ci = 0; ci < acc2.contacts.length; ci++) {
+      if (acc2.contacts[ci].id === cid) { contact = acc2.contacts[ci]; break; }
+    }
+    if (!contact) return;
+    for (var ti = 0; ti < acc2.tasks.length; ti++) {
+      if (acc2.tasks[ti].id === tid) {
+        acc2.tasks[ti].contactId = cid;
+        acc2.tasks[ti].contactName = contact.name;
+        break;
+      }
+    }
+    save();
+    renderTasks();
+    showToast('Taak gekoppeld aan ' + contact.name + '.');
+  } else if (el.hasAttribute('data-task-del')) {
+    delTask(el.getAttribute('data-task-del'));
+  } else if (el.hasAttribute('data-task-mailto')) {
+    var tid = el.getAttribute('data-task-mailto');
+    var t = getTask(tid);
+    if (t) openMailtoRaw(getContactEmail(t.contactId), t.touchSubject, t.touchContent);
+  } else if (el.hasAttribute('data-task-copy')) {
+    var tid2 = el.getAttribute('data-task-copy');
+    var t2 = getTask(tid2);
+    if (t2) {
+      copyText(t2.touchContent || '', function() {
+        el.textContent = 'Gekopieerd!';
+        setTimeout(function() { el.textContent = '\u29C9 Kopieer'; }, 2000);
+      });
+    }
+  } else if (el.hasAttribute('data-task-toggle-content')) {
+    var tid3 = el.getAttribute('data-task-toggle-content');
+    var contentEl = document.getElementById('tc_' + tid3);
+    if (contentEl) {
+      contentEl.style.display = contentEl.style.display === 'block' ? 'none' : 'block';
+      el.textContent = contentEl.style.display === 'block' ? 'Verberg tekst' : 'Toon tekst';
+    }
+  }
+});
+
+function getTask(id) {
+  var acc = getAcc();
+  if (!acc) return null;
+  for (var i = 0; i < acc.tasks.length; i++) {
+    if (acc.tasks[i].id === id) return acc.tasks[i];
+  }
+  return null;
+}
+
+function getContactEmail(cid) {
+  var acc = getAcc();
+  if (!acc || !cid) return '';
+  for (var i = 0; i < acc.contacts.length; i++) {
+    if (acc.contacts[i].id === cid) return acc.contacts[i].email || '';
+  }
+  return '';
+}
+
+function toggleTask(id) {
+  var acc = getAcc();
+  if (!acc) return;
+  for (var i = 0; i < acc.tasks.length; i++) {
+    if (acc.tasks[i].id === id) {
+      acc.tasks[i].done = !acc.tasks[i].done;
+      save();
+      renderTasks();
+      return;
+    }
+  }
+}
+
+function delTask(id) {
+  var acc = getAcc();
+  if (!acc) return;
+  acc.tasks = acc.tasks.filter(function(t) { return t.id !== id; });
+  save();
+  renderTasks();
+}
+
+// Task filter chips
+document.querySelectorAll('[data-task-filter]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    taskFilter = this.getAttribute('data-task-filter');
+    document.querySelectorAll('[data-task-filter]').forEach(function(b) {
+      b.classList.toggle('active', b.getAttribute('data-task-filter') === taskFilter);
+    });
+    renderTasks();
+  });
+});
+
+// Add task button
+document.getElementById('add-task-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) { alert('Selecteer eerst een account.'); return; }
+  var text = prompt('Taak omschrijving:');
+  if (!text) return;
+  var date = prompt('Datum (YYYY-MM-DD):', new Date().toISOString().substring(0,10));
+  acc.tasks.push({
+    id: 'task_' + Date.now(),
+    text: text,
+    date: date || new Date().toISOString().substring(0,10),
+    prio: 'mid',
+    done: false,
+    created: new Date().toISOString(),
+    touchType: '',
+    touchContent: '',
+    touchSubject: '',
+    contactId: '',
+    contactName: ''
+  });
+  save();
+  renderTasks();
+});
+
+// =====================================================================
+// NOTES
+// =====================================================================
+function renderNotes() {
+  var acc = getAcc();
+  var body = document.getElementById('notes-body');
+  if (!acc || !acc.notes || !acc.notes.length) {
+    body.innerHTML = '<div style="color:var(--m);font-size:12px;padding:20px">Geen notities.</div>';
+    return;
+  }
+  body.innerHTML = '';
+  acc.notes.forEach(function(n) {
+    var div = document.createElement('div');
+    div.className = 'note-item';
+    var ts = n.created ? new Date(n.created).toLocaleString('nl-NL') : '';
+    div.innerHTML =
+      '<div class="note-header">' +
+        '<span>' + escHtml((n.text || '').substring(0,60)) + (n.text && n.text.length > 60 ? '...' : '') + '</span>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<span class="note-ts">' + escHtml(ts) + '</span>' +
+          '<button class="note-del" data-note-del="' + n.id + '">\u00D7</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="note-content" id="nc_' + n.id + '">' + escHtml(n.text || '') + '</div>';
+    body.appendChild(div);
+  });
+}
+
+document.getElementById('notes-body').addEventListener('click', function(e) {
+  if (e.target.hasAttribute('data-note-del')) {
+    var id = e.target.getAttribute('data-note-del');
+    var acc = getAcc();
+    if (!acc) return;
+    acc.notes = acc.notes.filter(function(n) { return n.id !== id; });
+    save();
+    renderNotes();
+    return;
+  }
+  var hdr = e.target.closest('.note-header');
+  if (hdr) {
+    var item = hdr.closest('.note-item');
+    if (!item) return;
+    var content = item.querySelector('.note-content');
+    if (content) content.style.display = content.style.display === 'block' ? 'none' : 'block';
+  }
+});
+
+document.getElementById('note-add-btn').addEventListener('click', function() {
+  var acc = getAcc();
+  if (!acc) { alert('Selecteer eerst een account.'); return; }
+  var inp = document.getElementById('note-inp');
+  var text = (inp.value || '').trim();
+  if (!text) return;
+  acc.notes.push({id: 'n_' + Date.now(), text: text, created: new Date().toISOString()});
+  save();
+  inp.value = '';
+  renderNotes();
+});
+
+// =====================================================================
+// SEARCH
+// =====================================================================
+document.getElementById('search-do-btn').addEventListener('click', doSearch);
+document.getElementById('search-inp').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doSearch();
+});
+
+function doSearch() {
+  var q = document.getElementById('search-inp').value.trim().toLowerCase();
+  var results = document.getElementById('search-results');
+  if (!q) { results.innerHTML = ''; return; }
+
+  var hits = [];
+
+  // Search across ALL non-archived accounts
+  state.accounts.forEach(function(acc) {
+    if (acc.archived) return;
+    ensureAccFields(acc);
+    AGENTS.forEach(function(tab) {
+      var hist = acc.histories[tab] || [];
+      hist.forEach(function(m) {
+        var text = stripHtml(m.html);
+        var idx = text.toLowerCase().indexOf(q);
+        if (idx !== -1) {
+          var start = Math.max(0, idx - 60);
+          var snippet = escHtml(text.substring(start, idx)) +
+            '<mark>' + escHtml(text.substring(idx, idx + q.length)) + '</mark>' +
+            escHtml(text.substring(idx + q.length, idx + q.length + 100));
+          hits.push({accId: acc.id, accName: acc.name, tab: tab, role: m.role, snippet: snippet});
+        }
+      });
+    });
+    // Also search dossier fields
+    var dosText = Object.values(acc.dos).join(' ');
+    var didx = dosText.toLowerCase().indexOf(q);
+    if (didx !== -1) {
+      hits.push({accId: acc.id, accName: acc.name, tab: 'dossier', role: 'dossier', snippet: escHtml(dosText.substring(Math.max(0,didx-40), didx)) + '<mark>' + escHtml(dosText.substring(didx, didx+q.length)) + '</mark>' + escHtml(dosText.substring(didx+q.length, didx+q.length+80))});
+    }
+  });
+
+  if (!hits.length) {
+    results.innerHTML = '<div style="color:var(--m);padding:20px">Geen resultaten voor "' + escHtml(q) + '".</div>';
+    return;
+  }
+
+  results.innerHTML = '';
+  hits.forEach(function(h) {
+    var div = document.createElement('div');
+    div.className = 'search-hit';
+    div.innerHTML =
+      '<div class="search-acc-badge">' + escHtml(h.accName) + '</div>' +
+      '<div class="search-hit-tab">' + h.tab + ' \u2013 ' + h.role + '</div>' +
+      '<div>' + h.snippet + '</div>';
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', function() {
+      if (h.accId !== state.activeId) selectAccount(h.accId);
+      switchTab(h.tab);
+    });
+    results.appendChild(div);
+  });
+}
+
+// =====================================================================
+// FAVORITES
+// =====================================================================
+function addFavorite(tab, html) {
+  var acc = getAcc();
+  if (!acc) return;
+  acc.favorites.push({id: 'f_' + Date.now(), tab: tab, html: html, created: new Date().toISOString()});
+  save();
+}
+
+function renderFavs() {
+  var acc = getAcc();
+  var body = document.getElementById('favs-body');
+  if (!acc || !acc.favorites || !acc.favorites.length) {
+    body.innerHTML = '<div style="color:var(--m);font-size:12px;padding:20px">Geen favorieten. Klik op \u2605 in een agent antwoord om op te slaan.</div>';
+    return;
+  }
+  body.innerHTML = '';
+  acc.favorites.forEach(function(f) {
+    var div = document.createElement('div');
+    div.className = 'fav-item';
+    div.innerHTML =
+      '<div class="fav-tab">' + escHtml(f.tab) + '</div>' +
+      '<div class="fav-text">' + f.html + '</div>' +
+      '<button class="fav-del" data-fav-del="' + f.id + '">Verwijder</button>';
+    body.appendChild(div);
+  });
+}
+
+document.getElementById('favs-body').addEventListener('click', function(e) {
+  if (e.target.hasAttribute('data-fav-del')) {
+    var id = e.target.getAttribute('data-fav-del');
+    var acc = getAcc();
+    if (!acc) return;
+    acc.favorites = acc.favorites.filter(function(f) { return f.id !== id; });
+    save();
+    renderFavs();
+  }
+});
+
+// =====================================================================
+// MODAL
+// =====================================================================
+function openModal(label, title, detail) {
+  document.getElementById('modal-label').textContent = label || '';
+  document.getElementById('modal-title').textContent = title || '';
+  document.getElementById('modal-body').textContent = detail || '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+document.getElementById('modal-close').addEventListener('click', function() {
+  document.getElementById('modal-overlay').classList.remove('open');
+});
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('picker-overlay').classList.remove('open');
+  }
+});
+
+// =====================================================================
+// CHIP HANDLERS (context filters)
+// =====================================================================
+document.querySelectorAll('.chip[data-chip]').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    var tab = this.getAttribute('data-chip-tab');
+    var val = this.getAttribute('data-chip');
+    var inp = document.getElementById('inp-' + tab);
+    if (!inp) return;
+    var prompts = {
+      // research
+      overview: 'Geef een volledig bedrijfsoverzicht inclusief sector, grootte, structuur en digitale strategie.',
+      tech: 'Welke tech stack en softwareplatforms gebruikt dit bedrijf?',
+      news: 'Wat is het laatste nieuws en recente ontwikkelingen bij dit bedrijf?',
+      // signal
+      intent: 'Zoek intent signalen die Mendix-interesse aangeven bij dit bedrijf.',
+      hiring: 'Zoek hiring signalen: vacatures voor low-code, digitalisering, IT modernisering.',
+      events: 'Welke events, triggers of bedrijfswijzigingen zijn recent bij dit bedrijf?',
+      // mapping
+      // bdr
+      pitch: 'Schrijf een overtuigende Mendix elevator pitch specifiek voor dit account.',
+      pain: 'Wat zijn de specifieke pain points van dit bedrijf die Mendix oplost?',
+      value: 'Wat is de Mendix value proposition voor dit account?',
+      // email
+      follow: 'Schrijf een professionele follow-up email na een demo of meeting.',
+      proposal: 'Schrijf een reactie op een voorstel of offerte verzoek.',
+      noshow: 'Schrijf een vriendelijke no-show opvolging email.',
+      // battle
+      outsystems: 'Geef een battle card: Mendix vs OutSystems. Sterke punten, zwakke punten, win-strategie.',
+      powerplatform: 'Geef een battle card: Mendix vs Microsoft Power Platform. Hoe win ik dit gesprek?',
+      appian: 'Geef een battle card: Mendix vs Appian. Concrete argumenten.',
+      // objection
+      price: 'De klant zegt: "Mendix is te duur." Hoe handel ik dit bezwaar af?',
+      timing: 'De klant zegt: "Nu is niet het juiste moment." Hoe reageer ik?',
+      sponsor: 'De klant zegt: "We hebben geen executive sponsor." Hoe los ik dit op?',
+      // pipeline
+      next: 'Wat is de beste volgende stap in dit dealproces?',
+      risk: 'Analyseer de risicos in deze deal en hoe ik ze mitigeer.',
+      forecast: 'Help me een realistisch forecast voor deze deal te maken.'
+    };
+    if (prompts[val]) inp.value = prompts[val];
+    inp.focus();
+  });
+});
+
+// Textarea enter to send
+AGENTS.forEach(function(tab) {
+  var inp = document.getElementById('inp-' + tab);
+  if (inp) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send(tab);
+      }
+    });
+  }
+});
+
+// =====================================================================
+// INIT
+// =====================================================================
+load();
+renderDossier();
+</script>
+
+</body>
+</html>
