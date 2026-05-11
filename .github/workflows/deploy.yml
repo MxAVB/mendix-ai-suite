@@ -25,14 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate config.js from secrets
+      - name: Generate config.js
+        env:
+          SUPABASE_URL: ${{ secrets.APP_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.APP_SUPABASE_KEY }}
         run: |
-          cat > config.js << CONFIGEOF
-const APP_CONFIG = {
-  SUPABASE_URL: "${{ secrets.APP_SUPABASE_URL }}",
-  SUPABASE_KEY: "${{ secrets.APP_SUPABASE_KEY }}"
-};
-CONFIGEOF
+          printf 'const APP_CONFIG = {\n  SUPABASE_URL: "%s",\n  SUPABASE_KEY: "%s"\n};\n' "$SUPABASE_URL" "$SUPABASE_KEY" > config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
